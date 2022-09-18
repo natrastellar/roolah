@@ -1,0 +1,16 @@
+[package]
+name = "roolah"
+version = "0.1.0"
+authors = ["natrastellar"]
+edition = "2021"
+description = "A budgeting and productivity app for neurodivergent brains."
+# documentation = 
+readme = "README.md"
+# homepage = 
+repository = "https://github.com/natrastellar/roolah"
+license = "AGPL-3.0-or-later"
+license-file = "LICENSE"
+keywords = []
+categories = []
+
+[dependencies]
