@@ -1,3 +1,8 @@
+use crate::currency::currencies::USD;
+
+mod currency;
+
 fn main() {
-    println!("Hello, world!");
+    let amount = USD.from(5);
+    println!("My amount: {amount}");
 }
