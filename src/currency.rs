@@ -1,5 +1,7 @@
 use std::{ops::{Add, Sub, Mul, Div}, fmt::Display};
 
+pub use currencies::USD;
+
 pub mod currencies;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

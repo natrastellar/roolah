@@ -1,4 +1,4 @@
-use crate::currency::currencies::USD;
+use crate::currency::USD;
 
 mod currency;
 
