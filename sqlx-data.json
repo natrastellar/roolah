@@ -1,0 +1,63 @@
+{
+  "db": "SQLite",
+  "0768264d8cb23042c27917123498116ec875d0dd1dacb3b68aabb616021f1d65": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Right": 0
+      }
+    },
+    "query": "CREATE TABLE IF NOT EXISTS transactions (\n            id INTEGER\n                PRIMARY KEY,\n            date TEXT\n                NOT NULL\n                DEFAULT CURRENT_DATE\n                CHECK (date != ''),\n            posted_date TEXT\n                CHECK (posted_date != '')\n                CHECK (posted_date IS NULL\n                    OR strftime('%s', posted_date) >= strftime('%s', date)\n                ),\n            category INTEGER\n                REFERENCES categories(id)\n                ON DELETE SET NULL,\n            amount TEXT\n                NOT NULL\n                CHECK (amount != ''),\n            debit_account INTEGER\n                REFERENCES accounts(id)\n                ON DELETE SET NULL,\n            credit_account INTEGER\n                REFERENCES accounts(id)\n                ON DELETE SET NULL,\n            description TEXT\n                NOT NULL,\n            method INTEGER\n                REFERENCES methods(id)\n                ON DELETE SET NULL,\n            check_number INTEGER\n                CHECK (check_number IS NULL\n                    OR (debit_account NOT NULL)\n                ),\n            UNIQUE (check_number, debit_account)\n        )\n        STRICT"
+  },
+  "176ddaf82c4ccdfe08c686f3d3bdd96c3f1df967e60f306bfb25fa9fd10e608f": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Right": 0
+      }
+    },
+    "query": "CREATE TABLE IF NOT EXISTS categories (\n            id INTEGER\n                PRIMARY KEY,\n            name TEXT\n                NOT NULL\n                CHECK (name != '')\n        )\n        STRICT"
+  },
+  "5ee517ff8d73631aedd7b174501287ad46ee2c407d145837ba0262a6568538da": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Right": 0
+      }
+    },
+    "query": "CREATE TABLE IF NOT EXISTS currencies (\n            id INTEGER\n                PRIMARY KEY,\n            symbol TEXT\n                NOT NULL,\n            name TEXT\n                NOT NULL\n                CHECK (name != ''),\n            precision INTEGER\n                NOT NULL\n                DEFAULT 2,\n            thousand_separator TEXT\n                NOT NULL\n                DEFAULT ',',\n            decimal_separator TEXT\n                NOT NULL\n                DEFAULT '.'\n        )\n        STRICT"
+  },
+  "aa703b8c018b3fe9d1e759eab1b9cac6dd80ec9827655fe4ac9dd8d0aa6204f5": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Right": 0
+      }
+    },
+    "query": "CREATE TABLE IF NOT EXISTS accounts (\n            id INTEGER\n                PRIMARY KEY,\n            name TEXT\n                NOT NULL\n                CHECK (name != ''),\n            currency INTEGER\n                NOT NULL\n                REFERENCES currencies(id)\n                ON DELETE RESTRICT,\n            balance TEXT\n                NOT NULL\n                DEFAULT '0'\n                CHECK (balance != ''),\n            posted_balance TEXT\n                NOT NULL\n                DEFAULT '0'\n                CHECK (posted_balance != ''),\n            type TEXT\n                NOT NULL\n                REFERENCES account_types(id)\n                ON DELETE RESTRICT\n                CHECK (type != '')\n        )\n        STRICT"
+  },
+  "db7b789a8525e3653197e2d8bd595f9104e934b6435113190be24ef2bde50f65": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Right": 0
+      }
+    },
+    "query": "CREATE TABLE IF NOT EXISTS account_types (\n            id INTEGER\n                PRIMARY KEY,\n            name TEXT\n                NOT NULL\n                CHECK (name != '')\n        )\n        STRICT"
+  },
+  "e923db8e2a3e40f3c67d8a4c904ec99e8838eb2e60033a2710d81c145eec0c92": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Right": 0
+      }
+    },
+    "query": "CREATE TABLE IF NOT EXISTS methods (\n            id INTEGER\n                PRIMARY KEY,\n            name TEXT\n                NOT NULL\n                CHECK (name != '')\n        )\n        STRICT"
+  }
+}

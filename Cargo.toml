@@ -16,5 +16,10 @@ categories = []
 miette = { version = "5.3", features = ["fancy"] }
 thiserror = "1.0"
 time = "0.3"
+sqlx = { version = "0.6", features = ["runtime-tokio-rustls", "time", "sqlite", "offline", "decimal"] }
+tokio = { version = "1.21", features = ["full"] }
 rust_decimal = "1.26"
 rust_decimal_macros = "1.26"
+
+[profile.dev.package.sqlx-macros]
+opt-level = 3
