@@ -9,8 +9,12 @@ readme = "README.md"
 # homepage = 
 repository = "https://github.com/natrastellar/roolah"
 license = "AGPL-3.0-or-later"
-license-file = "LICENSE"
 keywords = []
 categories = []
 
 [dependencies]
+miette = { version = "5.3", features = ["fancy"] }
+thiserror = "1.0"
+time = "0.3"
+rust_decimal = "1.26"
+rust_decimal_macros = "1.26"

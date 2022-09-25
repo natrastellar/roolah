@@ -1,22 +1,25 @@
-use std::{ops::{Add, Sub, Mul, Div}, fmt::Display};
-
-pub use currencies::USD;
+use rust_decimal::Decimal;
+use std::{
+    fmt::Display,
+    ops::{Add, Div, Mul, Sub},
+};
 
 pub mod currencies;
+pub use currencies::*;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct CurrencyFormat<'a> {
     symbol: &'a str,
     precision: u8,
     thousand_separator: &'a str,
-    decimal_separator: &'a str
+    decimal_separator: &'a str,
 }
 
 impl<'a> CurrencyFormat<'a> {
-    pub fn format_value<T: Into<f64>>(&self, value: T) -> String {
-        let value: f64 = value.into();
+    pub fn format_value<T: Into<Decimal>>(&self, value: T) -> String {
+        let value: Decimal = value.into();
         let value_str = format!("{:.*}", self.precision as usize, value.abs());
-        if value == 0.0 {
+        if value == Decimal::ZERO {
             return value_str.replace(".", self.decimal_separator);
         }
         let mut parts = value_str.split('.');
@@ -39,7 +42,7 @@ impl<'a> CurrencyFormat<'a> {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Currency<'a, T> {
     value: T,
     format: CurrencyFormat<'a>,
@@ -51,51 +54,77 @@ impl<'a, T> Currency<'a, T> {
     }
 }
 
-impl<T> Add for Currency<'_, T> where T: Add + From<<T as Add>::Output> {
+impl<T> Add for Currency<'_, T>
+where
+    T: Add + From<<T as Add>::Output>,
+{
     type Output = Self;
 
     fn add(self, rhs: Self) -> Self::Output {
         let val = T::from(self.value + rhs.value);
-        Self { value: val, format: self.format }
+        Self {
+            value: val,
+            format: self.format,
+        }
     }
 }
 
-impl<T> Sub for Currency<'_, T> where T: Sub + From<<T as Sub>::Output> {
+impl<T> Sub for Currency<'_, T>
+where
+    T: Sub + From<<T as Sub>::Output>,
+{
     type Output = Self;
 
     fn sub(self, rhs: Self) -> Self::Output {
         let val = T::from(self.value - rhs.value);
-        Self { value: val, format: self.format }
+        Self {
+            value: val,
+            format: self.format,
+        }
     }
 }
 
-impl<T, V> Mul<V> for Currency<'_, T> where T: Mul<V> + From<<T as Mul<V>>::Output> {
+impl<T, V> Mul<V> for Currency<'_, T>
+where
+    T: Mul<V> + From<<T as Mul<V>>::Output>,
+{
     type Output = Self;
 
     fn mul(self, rhs: V) -> Self::Output {
         let val = T::from(self.value * rhs);
-        Self { value: val, format: self.format }
+        Self {
+            value: val,
+            format: self.format,
+        }
     }
 }
 
-impl<T, V> Div<V> for Currency<'_, T> where T: Div<V> + From<<T as Div<V>>::Output> {
+impl<T, V> Div<V> for Currency<'_, T>
+where
+    T: Div<V> + From<<T as Div<V>>::Output>,
+{
     type Output = Self;
 
     fn div(self, rhs: V) -> Self::Output {
         let val = T::from(self.value / rhs);
-        Self { value: val, format: self.format }
+        Self {
+            value: val,
+            format: self.format,
+        }
     }
 }
 
-impl<T> Display for Currency<'_, T> where T: Into<f64> + Copy {
+impl<T> Display for Currency<'_, T>
+where
+    T: Into<Decimal> + Copy,
+{
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let symbol = self.format.symbol;
-        let value: f64 = self.value.into();
+        let value: Decimal = self.value.into();
         let value_str = self.format.format_value(self.value);
-        if value < 0.0 {
+        if !value.is_zero() && value.is_sign_negative() {
             f.write_fmt(format_args!("{symbol} ({value_str})"))
-        }
-        else {
+        } else {
             f.write_fmt(format_args!("{symbol} {value_str}"))
         }
     }
@@ -104,7 +133,8 @@ impl<T> Display for Currency<'_, T> where T: Into<f64> + Copy {
 mod test {
     #[test]
     fn math() {
-        use crate::USD;
+        use super::USD;
+
         assert_eq!(USD.from(2) + USD.from(3), USD.from(5));
         assert_eq!(USD.from(2) - USD.from(3), USD.from(-1));
         assert_eq!(USD.from(2) * 2, USD.from(4));
@@ -113,15 +143,18 @@ mod test {
 
     #[test]
     fn format_usd() {
-        use crate::USD;
-        assert_eq!(USD.format_value(-3.14), "3.14");
+        use super::USD;
+        use rust_decimal::Decimal;
+        use rust_decimal_macros::dec;
+
+        assert_eq!(USD.format_value(dec!(-3.14)), "3.14");
         assert_eq!(format!("{}", USD.from(2)), "$ 2.00");
         assert_eq!(format!("{}", USD.from(-2)), "$ (2.00)");
         assert_eq!(format!("{}", USD.from(0)), "$ 0.00");
-        assert_eq!(format!("{}", USD.from(-0.0)), "$ 0.00");
-        assert_eq!(format!("{}", USD.from(2.124)), "$ 2.12");
-        assert_eq!(format!("{}", USD.from(2.125)), "$ 2.12");
-        assert_eq!(format!("{}", USD.from(-2.125)), "$ (2.12)");
-        assert_eq!(format!("{}", USD.from(2.126)), "$ 2.13");
+        assert_eq!(format!("{}", USD.from(-Decimal::ZERO)), "$ 0.00");
+        assert_eq!(format!("{}", USD.from(dec!(2.124))), "$ 2.12");
+        assert_eq!(format!("{}", USD.from(dec!(2.125))), "$ 2.12");
+        assert_eq!(format!("{}", USD.from(dec!(-2.125))), "$ (2.12)");
+        assert_eq!(format!("{}", USD.from(dec!(2.126))), "$ 2.13");
     }
 }
