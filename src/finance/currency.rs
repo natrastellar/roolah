@@ -1,18 +1,20 @@
-use rust_decimal::Decimal;
-use std::{
+use core::{
     fmt::Display,
     ops::{Add, Div, Mul, Sub},
 };
+use rust_decimal::Decimal;
+use std::{borrow::Cow, fmt};
 
 pub mod currencies;
 pub use currencies::*;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, PartialEq, Eq, Hash)]
 pub struct CurrencyFormat<'a> {
-    symbol: &'a str,
-    precision: u8,
-    thousand_separator: &'a str,
-    decimal_separator: &'a str,
+    pub symbol: Cow<'a, str>,
+    pub name: Cow<'a, str>,
+    pub precision: u8,
+    pub thousand_separator: Cow<'a, str>,
+    pub decimal_separator: Cow<'a, str>,
 }
 
 impl<'a> CurrencyFormat<'a> {
@@ -20,7 +22,7 @@ impl<'a> CurrencyFormat<'a> {
         let value: Decimal = value.into();
         let value_str = format!("{:.*}", self.precision as usize, value.abs());
         if value == Decimal::ZERO {
-            return value_str.replace(".", self.decimal_separator);
+            return value_str.replace(".", &self.decimal_separator);
         }
         let mut parts = value_str.split('.');
         let whole_str = parts.next().expect("leading decimals");
@@ -28,21 +30,37 @@ impl<'a> CurrencyFormat<'a> {
         let mut result = String::new();
         for (i, ch) in whole_str.chars().rev().enumerate() {
             if i % 3 == 0 && i != 0 {
-                result.push_str(self.thousand_separator);
+                result.push_str(&self.thousand_separator);
             }
             result.push(ch);
         }
-        result.push_str(self.decimal_separator);
+        result.push_str(&self.decimal_separator);
         result.push_str(decimal_str);
         result
     }
 
     pub fn from<T>(&self, val: T) -> Currency<'a, T> {
-        Currency::new(val, *self)
+        Currency::new(val, self.clone())
+    }
+
+    pub fn into_owned(self) -> CurrencyFormat<'static> {
+        CurrencyFormat {
+            symbol: self.symbol.into_owned().into(),
+            name: self.name.into_owned().into(),
+            precision: self.precision,
+            thousand_separator: self.thousand_separator.into_owned().into(),
+            decimal_separator: self.decimal_separator.into_owned().into()
+        }
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+impl Clone for CurrencyFormat<'_> {
+    fn clone(&self) -> Self {
+        Self { symbol: self.symbol.clone(), name: self.name.clone(), precision: self.precision.clone(), thousand_separator: self.thousand_separator.clone(), decimal_separator: self.decimal_separator.clone() }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Currency<'a, T> {
     value: T,
     format: CurrencyFormat<'a>,
@@ -118,8 +136,8 @@ impl<T> Display for Currency<'_, T>
 where
     T: Into<Decimal> + Copy,
 {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let symbol = self.format.symbol;
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let symbol = &self.format.symbol;
         let value: Decimal = self.value.into();
         let value_str = self.format.format_value(self.value);
         if !value.is_zero() && value.is_sign_negative() {
@@ -133,7 +151,7 @@ where
 mod test {
     #[test]
     fn math() {
-        use super::USD;
+        use super::currencies::USD;
 
         assert_eq!(USD.from(2) + USD.from(3), USD.from(5));
         assert_eq!(USD.from(2) - USD.from(3), USD.from(-1));
@@ -143,7 +161,7 @@ mod test {
 
     #[test]
     fn format_usd() {
-        use super::USD;
+        use super::currencies::USD;
         use rust_decimal::Decimal;
         use rust_decimal_macros::dec;
 

@@ -1,12 +1,14 @@
-use std::{
+use core::{
     fmt::Display,
     hash::{Hash, Hasher},
 };
+use std::fmt;
+use sqlx::FromRow;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, FromRow)]
 pub struct Tag {
-    id: u32,
-    name: String,
+    pub id: i64,
+    pub name: String,
 }
 
 impl PartialEq for Tag {
@@ -24,24 +26,9 @@ impl Hash for Tag {
 }
 
 impl Display for Tag {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str(&self.name)
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct Category {
-    tag: Tag,
-}
-
-impl From<Tag> for Category {
-    fn from(tag: Tag) -> Self {
-        Self { tag }
-    }
-}
-
-impl Display for Category {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_fmt(format_args!("{}", self.tag))
-    }
-}
+//TODO Add tests

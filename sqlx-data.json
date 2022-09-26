@@ -1,16 +1,36 @@
 {
   "db": "SQLite",
-  "0768264d8cb23042c27917123498116ec875d0dd1dacb3b68aabb616021f1d65": {
+  "1910b8593899552e7e1db8fb4de5113d57e924c3898f37b6d3d0c6092921f024": {
     "describe": {
-      "columns": [],
-      "nullable": [],
+      "columns": [
+        {
+          "name": "id!",
+          "ordinal": 0,
+          "type_info": "Int64"
+        },
+        {
+          "name": "balance!",
+          "ordinal": 1,
+          "type_info": "Text"
+        },
+        {
+          "name": "posted_balance!",
+          "ordinal": 2,
+          "type_info": "Text"
+        }
+      ],
+      "nullable": [
+        true,
+        true,
+        true
+      ],
       "parameters": {
-        "Right": 0
+        "Right": 3
       }
     },
-    "query": "CREATE TABLE IF NOT EXISTS transactions (\n            id INTEGER\n                PRIMARY KEY,\n            date TEXT\n                NOT NULL\n                DEFAULT CURRENT_DATE\n                CHECK (date != ''),\n            posted_date TEXT\n                CHECK (posted_date != '')\n                CHECK (posted_date IS NULL\n                    OR strftime('%s', posted_date) >= strftime('%s', date)\n                ),\n            category INTEGER\n                REFERENCES categories(id)\n                ON DELETE SET NULL,\n            amount TEXT\n                NOT NULL\n                CHECK (amount != ''),\n            debit_account INTEGER\n                REFERENCES accounts(id)\n                ON DELETE SET NULL,\n            credit_account INTEGER\n                REFERENCES accounts(id)\n                ON DELETE SET NULL,\n            description TEXT\n                NOT NULL,\n            method INTEGER\n                REFERENCES methods(id)\n                ON DELETE SET NULL,\n            check_number INTEGER\n                CHECK (check_number IS NULL\n                    OR (debit_account NOT NULL)\n                ),\n            UNIQUE (check_number, debit_account)\n        )\n        STRICT"
+    "query": "INSERT OR IGNORE INTO accounts (name, currency, account_type)\n        VALUES (?, ?, ?)\n        RETURNING\n            id as \"id!\",\n            balance as \"balance!\",\n            posted_balance as \"posted_balance!\"\n        "
   },
-  "176ddaf82c4ccdfe08c686f3d3bdd96c3f1df967e60f306bfb25fa9fd10e608f": {
+  "2d7201bf92994f5d080f706b2670c7b9b4415157e6cf5378cdb1a412dcadf4c1": {
     "describe": {
       "columns": [],
       "nullable": [],
@@ -18,29 +38,75 @@
         "Right": 0
       }
     },
-    "query": "CREATE TABLE IF NOT EXISTS categories (\n            id INTEGER\n                PRIMARY KEY,\n            name TEXT\n                NOT NULL\n                CHECK (name != '')\n        )\n        STRICT"
+    "query": "CREATE VIEW IF NOT EXISTS accounts_with_currency_and_type AS\r\nSELECT\r\n    accounts.id AS id,\r\n    accounts.name AS name,\r\n    accounts.currency AS currency,\r\n    accounts.balance AS balance,\r\n    accounts.posted_balance AS posted_balance,\r\n    accounts.account_type AS account_type,\r\n    currencies.symbol AS symbol,\r\n    currencies.name AS currency_name,\r\n    currencies.precision AS precision,\r\n    currencies.thousand_separator AS thousand_separator,\r\n    currencies.decimal_separator AS decimal_separator,\r\n    account_types.name as account_type_name\r\nFROM accounts\r\nINNER JOIN account_types\r\n    ON accounts.account_type = account_types.id\r\nINNER JOIN currencies\r\n    ON accounts.currency = currencies.id"
   },
-  "5ee517ff8d73631aedd7b174501287ad46ee2c407d145837ba0262a6568538da": {
+  "387eba70c2039a9b09a0c38986590637811873dceedbebd7be8bff6a11d555f5": {
     "describe": {
-      "columns": [],
-      "nullable": [],
+      "columns": [
+        {
+          "name": "id!",
+          "ordinal": 0,
+          "type_info": "Int64"
+        }
+      ],
+      "nullable": [
+        true
+      ],
       "parameters": {
-        "Right": 0
+        "Right": 5
       }
     },
-    "query": "CREATE TABLE IF NOT EXISTS currencies (\n            id INTEGER\n                PRIMARY KEY,\n            symbol TEXT\n                NOT NULL,\n            name TEXT\n                NOT NULL\n                CHECK (name != ''),\n            precision INTEGER\n                NOT NULL\n                DEFAULT 2,\n            thousand_separator TEXT\n                NOT NULL\n                DEFAULT ',',\n            decimal_separator TEXT\n                NOT NULL\n                DEFAULT '.'\n        )\n        STRICT"
+    "query": "INSERT OR IGNORE INTO currencies (symbol, name, precision, thousand_separator, decimal_separator)\n        VALUES (?, ?, ?, ?, ?)\n        RETURNING\n            id as \"id!\"\n        "
   },
-  "aa703b8c018b3fe9d1e759eab1b9cac6dd80ec9827655fe4ac9dd8d0aa6204f5": {
+  "3a5f83024c5c9b77b4a5a8c77250bcf4d9266550917d73266ba1c2bc0d7664e6": {
     "describe": {
-      "columns": [],
-      "nullable": [],
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Int64"
+        },
+        {
+          "name": "symbol",
+          "ordinal": 1,
+          "type_info": "Text"
+        },
+        {
+          "name": "name",
+          "ordinal": 2,
+          "type_info": "Text"
+        },
+        {
+          "name": "precision",
+          "ordinal": 3,
+          "type_info": "Int64"
+        },
+        {
+          "name": "thousand_separator",
+          "ordinal": 4,
+          "type_info": "Text"
+        },
+        {
+          "name": "decimal_separator",
+          "ordinal": 5,
+          "type_info": "Text"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
       "parameters": {
-        "Right": 0
+        "Right": 1
       }
     },
-    "query": "CREATE TABLE IF NOT EXISTS accounts (\n            id INTEGER\n                PRIMARY KEY,\n            name TEXT\n                NOT NULL\n                CHECK (name != ''),\n            currency INTEGER\n                NOT NULL\n                REFERENCES currencies(id)\n                ON DELETE RESTRICT,\n            balance TEXT\n                NOT NULL\n                DEFAULT '0'\n                CHECK (balance != ''),\n            posted_balance TEXT\n                NOT NULL\n                DEFAULT '0'\n                CHECK (posted_balance != ''),\n            type TEXT\n                NOT NULL\n                REFERENCES account_types(id)\n                ON DELETE RESTRICT\n                CHECK (type != '')\n        )\n        STRICT"
+    "query": "SELECT * FROM currencies WHERE name = ?"
   },
-  "db7b789a8525e3653197e2d8bd595f9104e934b6435113190be24ef2bde50f65": {
+  "4196d99311ae00b4b5a85cb0ecec997aba7847854cafad94880e3e64b9ae2d54": {
     "describe": {
       "columns": [],
       "nullable": [],
@@ -48,9 +114,93 @@
         "Right": 0
       }
     },
-    "query": "CREATE TABLE IF NOT EXISTS account_types (\n            id INTEGER\n                PRIMARY KEY,\n            name TEXT\n                NOT NULL\n                CHECK (name != '')\n        )\n        STRICT"
+    "query": "CREATE TABLE IF NOT EXISTS accounts (\r\n    id INTEGER\r\n        PRIMARY KEY\r\n        NOT NULL,\r\n    name TEXT\r\n        UNIQUE\r\n        NOT NULL\r\n        CHECK (name != ''),\r\n    currency INTEGER\r\n        NOT NULL\r\n        REFERENCES currencies(id)\r\n        ON DELETE RESTRICT,\r\n    balance TEXT\r\n        NOT NULL\r\n        DEFAULT '0'\r\n        CHECK (balance != ''),\r\n    posted_balance TEXT\r\n        NOT NULL\r\n        DEFAULT '0'\r\n        CHECK (posted_balance != ''),\r\n    account_type INTEGER\r\n        NOT NULL\r\n        REFERENCES account_types(id)\r\n        ON DELETE RESTRICT\r\n        CHECK (account_type != '')\r\n)\r\nSTRICT"
   },
-  "e923db8e2a3e40f3c67d8a4c904ec99e8838eb2e60033a2710d81c145eec0c92": {
+  "4e76dfc01ee707c16d797b7bf14d7f304c85d3a044f71ab782e9cd0712e1d533": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Int64"
+        },
+        {
+          "name": "name",
+          "ordinal": 1,
+          "type_info": "Text"
+        },
+        {
+          "name": "currency",
+          "ordinal": 2,
+          "type_info": "Int64"
+        },
+        {
+          "name": "balance",
+          "ordinal": 3,
+          "type_info": "Text"
+        },
+        {
+          "name": "posted_balance",
+          "ordinal": 4,
+          "type_info": "Text"
+        },
+        {
+          "name": "account_type",
+          "ordinal": 5,
+          "type_info": "Int64"
+        },
+        {
+          "name": "symbol",
+          "ordinal": 6,
+          "type_info": "Text"
+        },
+        {
+          "name": "currency_name",
+          "ordinal": 7,
+          "type_info": "Text"
+        },
+        {
+          "name": "precision",
+          "ordinal": 8,
+          "type_info": "Int64"
+        },
+        {
+          "name": "thousand_separator",
+          "ordinal": 9,
+          "type_info": "Text"
+        },
+        {
+          "name": "decimal_separator",
+          "ordinal": 10,
+          "type_info": "Text"
+        },
+        {
+          "name": "account_type_name",
+          "ordinal": 11,
+          "type_info": "Text"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "parameters": {
+        "Right": 1
+      }
+    },
+    "query": "SELECT * FROM accounts_with_currency_and_type WHERE name = ?"
+  },
+  "69fcb2f1674fbe882bc9e05e02fe1001367e2438ad28d682fb23e813804fb167": {
     "describe": {
       "columns": [],
       "nullable": [],
@@ -58,6 +208,178 @@
         "Right": 0
       }
     },
-    "query": "CREATE TABLE IF NOT EXISTS methods (\n            id INTEGER\n                PRIMARY KEY,\n            name TEXT\n                NOT NULL\n                CHECK (name != '')\n        )\n        STRICT"
+    "query": "CREATE TABLE IF NOT EXISTS account_types (\r\n    id INTEGER\r\n        PRIMARY KEY\r\n        NOT NULL,\r\n    name TEXT\r\n        UNIQUE\r\n        NOT NULL\r\n        CHECK (name != '')\r\n)\r\nSTRICT"
+  },
+  "83cf8dbb99ef48da7a5250a7a13c0f9a41ce3b137f527ba935014889ed9db411": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Right": 0
+      }
+    },
+    "query": "CREATE TABLE IF NOT EXISTS methods (\r\n    id INTEGER\r\n        PRIMARY KEY\r\n        NOT NULL,\r\n    name TEXT\r\n        UNIQUE\r\n        NOT NULL\r\n        CHECK (name != '')\r\n)\r\nSTRICT"
+  },
+  "be4cd081f071eab53c258e75f7dedc53936dee6b5c3d03c21befcb84f090320e": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Int64"
+        },
+        {
+          "name": "name",
+          "ordinal": 1,
+          "type_info": "Text"
+        }
+      ],
+      "nullable": [
+        false,
+        false
+      ],
+      "parameters": {
+        "Right": 1
+      }
+    },
+    "query": "SELECT * FROM account_types WHERE name = ?"
+  },
+  "cf3dafd3e0b6cb8f9d2f51bcf914481f8a3d2f685871a89530800dbfc96b4dca": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Int64"
+        },
+        {
+          "name": "name",
+          "ordinal": 1,
+          "type_info": "Text"
+        },
+        {
+          "name": "currency",
+          "ordinal": 2,
+          "type_info": "Int64"
+        },
+        {
+          "name": "balance",
+          "ordinal": 3,
+          "type_info": "Text"
+        },
+        {
+          "name": "posted_balance",
+          "ordinal": 4,
+          "type_info": "Text"
+        },
+        {
+          "name": "account_type",
+          "ordinal": 5,
+          "type_info": "Int64"
+        },
+        {
+          "name": "symbol",
+          "ordinal": 6,
+          "type_info": "Text"
+        },
+        {
+          "name": "currency_name",
+          "ordinal": 7,
+          "type_info": "Text"
+        },
+        {
+          "name": "precision",
+          "ordinal": 8,
+          "type_info": "Int64"
+        },
+        {
+          "name": "thousand_separator",
+          "ordinal": 9,
+          "type_info": "Text"
+        },
+        {
+          "name": "decimal_separator",
+          "ordinal": 10,
+          "type_info": "Text"
+        },
+        {
+          "name": "account_type_name",
+          "ordinal": 11,
+          "type_info": "Text"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "parameters": {
+        "Right": 0
+      }
+    },
+    "query": "SELECT * FROM accounts_with_currency_and_type"
+  },
+  "d7ea7db97ee9b8610359bee0f77d43c0505648c31b48dc640fd5e9109ebc99df": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Right": 0
+      }
+    },
+    "query": "CREATE TABLE IF NOT EXISTS categories (\r\n    id INTEGER\r\n        PRIMARY KEY\r\n        NOT NULL,\r\n    name TEXT\r\n        UNIQUE\r\n        NOT NULL\r\n        CHECK (name != '')\r\n)\r\nSTRICT"
+  },
+  "e0e04fc482342d82901d648bf96d344afd4181e77a4782dff516e499298b883b": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Right": 0
+      }
+    },
+    "query": "CREATE TABLE IF NOT EXISTS currencies (\r\n    id INTEGER\r\n        PRIMARY KEY\r\n        NOT NULL,\r\n    symbol TEXT\r\n        NOT NULL,\r\n    name TEXT\r\n        UNIQUE\r\n        NOT NULL\r\n        CHECK (name != ''),\r\n    precision INTEGER\r\n        NOT NULL\r\n        DEFAULT 2,\r\n    thousand_separator TEXT\r\n        NOT NULL\r\n        DEFAULT ',',\r\n    decimal_separator TEXT\r\n        NOT NULL\r\n        DEFAULT '.'\r\n)\r\nSTRICT"
+  },
+  "ec36000e5f5ea6f2dabdd4906f15910e1f257198b03713b6d995a7b31c448537": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Right": 0
+      }
+    },
+    "query": "CREATE TABLE IF NOT EXISTS transactions (\r\n    id INTEGER\r\n        PRIMARY KEY\r\n        NOT NULL,\r\n    date TEXT\r\n        NOT NULL\r\n        DEFAULT CURRENT_DATE\r\n        CHECK (date != ''),\r\n    posted_date TEXT\r\n        CHECK (posted_date != '')\r\n        CHECK (posted_date IS NULL\r\n            OR strftime('%s', posted_date) >= strftime('%s', date)\r\n        ),\r\n    category INTEGER\r\n        REFERENCES categories(id)\r\n        ON DELETE SET NULL,\r\n    amount TEXT\r\n        NOT NULL\r\n        CHECK (amount != ''),\r\n    debit_account INTEGER\r\n        REFERENCES accounts(id)\r\n        ON DELETE SET NULL,\r\n    credit_account INTEGER\r\n        REFERENCES accounts(id)\r\n        ON DELETE SET NULL,\r\n    authority TEXT\r\n        NOT NULL,\r\n    description TEXT\r\n        NOT NULL,\r\n    method INTEGER\r\n        REFERENCES methods(id)\r\n        ON DELETE SET NULL,\r\n    check_number INTEGER\r\n        CHECK (check_number IS NULL\r\n            OR (debit_account NOT NULL)\r\n        ),\r\n    UNIQUE (check_number, debit_account)\r\n)\r\nSTRICT"
+  },
+  "f2bd7da93d3e947e57782a3d10fdd33a8a2a53f9ee7f834779689da750f32520": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id!",
+          "ordinal": 0,
+          "type_info": "Int64"
+        },
+        {
+          "name": "name!",
+          "ordinal": 1,
+          "type_info": "Text"
+        }
+      ],
+      "nullable": [
+        true,
+        true
+      ],
+      "parameters": {
+        "Right": 1
+      }
+    },
+    "query": "INSERT OR IGNORE INTO account_types (name)\n        VALUES (?)\n        RETURNING\n            id AS \"id!\",\n            name AS \"name!\"\n        "
   }
 }

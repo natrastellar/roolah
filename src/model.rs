@@ -1,8 +1,7 @@
-pub mod account;
-pub mod currency;
-pub mod tag;
-pub mod transaction;
+mod account;
+mod tag;
+mod transaction;
 
-pub use account::Account;
+pub use account::{Account, AccountType};
 pub use tag::Tag;
-pub use transaction::Transaction;
+pub use transaction::{Transaction, Category as TransactionCategory};
