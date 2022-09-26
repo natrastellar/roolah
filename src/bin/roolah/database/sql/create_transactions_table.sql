@@ -36,4 +36,17 @@ CREATE TABLE IF NOT EXISTS transactions (
         ),
     UNIQUE (check_number, debit_account)
 )
-STRICT
+STRICT;
+
+CREATE UNIQUE INDEX IF NOT EXISTS transaction_date ON transactions (date);
+CREATE UNIQUE INDEX IF NOT EXISTS transaction_posted_date ON transactions (posted_date);
+CREATE UNIQUE INDEX IF NOT EXISTS transaction_category ON transactions (category);
+CREATE UNIQUE INDEX IF NOT EXISTS transaction_amount ON transactions (amount);
+CREATE UNIQUE INDEX IF NOT EXISTS transaction_debit_account ON transactions (debit_account);
+CREATE UNIQUE INDEX IF NOT EXISTS transaction_credit_account ON transactions (credit_account);
+CREATE UNIQUE INDEX IF NOT EXISTS transaction_authority ON transactions (authority);
+CREATE UNIQUE INDEX IF NOT EXISTS transaction_description ON transactions (description);
+CREATE UNIQUE INDEX IF NOT EXISTS transaction_method ON transactions (method);
+CREATE UNIQUE INDEX IF NOT EXISTS transaction_check_number ON transactions (check_number);
+CREATE UNIQUE INDEX IF NOT EXISTS transaction_debit_account_change_magnitude ON transactions (debit_account, abs(amount));
+CREATE UNIQUE INDEX IF NOT EXISTS transaction_category_change_magnitude ON transactions (category, abs(amount))

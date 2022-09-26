@@ -7,4 +7,6 @@ CREATE TABLE IF NOT EXISTS methods (
         NOT NULL
         CHECK (name != '')
 )
-STRICT
+STRICT;
+
+CREATE UNIQUE INDEX IF NOT EXISTS method_name ON methods (name)

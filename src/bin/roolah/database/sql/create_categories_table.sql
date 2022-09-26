@@ -7,4 +7,6 @@ CREATE TABLE IF NOT EXISTS categories (
         NOT NULL
         CHECK (name != '')
 )
-STRICT
+STRICT;
+
+CREATE UNIQUE INDEX IF NOT EXISTS category_name ON categories (name)

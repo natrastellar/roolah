@@ -7,4 +7,6 @@ CREATE TABLE IF NOT EXISTS account_types (
         NOT NULL
         CHECK (name != '')
 )
-STRICT
+STRICT;
+
+CREATE UNIQUE INDEX IF NOT EXISTS account_type_name ON account_types (name)

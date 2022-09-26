@@ -1,5 +1,15 @@
 {
   "db": "SQLite",
+  "10d02f8d682afc31b70b1f83bb866069ea69c71485a041d3d720d3c2d7afdce7": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Right": 0
+      }
+    },
+    "query": "CREATE TABLE IF NOT EXISTS accounts (\r\n    id INTEGER\r\n        PRIMARY KEY\r\n        NOT NULL,\r\n    name TEXT\r\n        UNIQUE\r\n        NOT NULL\r\n        CHECK (name != ''),\r\n    currency INTEGER\r\n        NOT NULL\r\n        REFERENCES currencies(id)\r\n        ON DELETE RESTRICT,\r\n    balance TEXT\r\n        NOT NULL\r\n        DEFAULT '0'\r\n        CHECK (balance != ''),\r\n    posted_balance TEXT\r\n        NOT NULL\r\n        DEFAULT '0'\r\n        CHECK (posted_balance != ''),\r\n    account_type INTEGER\r\n        NOT NULL\r\n        REFERENCES account_types(id)\r\n        ON DELETE RESTRICT\r\n        CHECK (account_type != '')\r\n)\r\nSTRICT;\r\n\r\nCREATE UNIQUE INDEX IF NOT EXISTS account_name ON accounts (name)\r\n"
+  },
   "1910b8593899552e7e1db8fb4de5113d57e924c3898f37b6d3d0c6092921f024": {
     "describe": {
       "columns": [
@@ -29,6 +39,16 @@
       }
     },
     "query": "INSERT OR IGNORE INTO accounts (name, currency, account_type)\n        VALUES (?, ?, ?)\n        RETURNING\n            id as \"id!\",\n            balance as \"balance!\",\n            posted_balance as \"posted_balance!\"\n        "
+  },
+  "1f602530118dd7c4dee6207f376fc7b05ebc507439c0c238ed1e7020ab3e0aec": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Right": 0
+      }
+    },
+    "query": "CREATE TABLE IF NOT EXISTS methods (\r\n    id INTEGER\r\n        PRIMARY KEY\r\n        NOT NULL,\r\n    name TEXT\r\n        UNIQUE\r\n        NOT NULL\r\n        CHECK (name != '')\r\n)\r\nSTRICT;\r\n\r\nCREATE UNIQUE INDEX IF NOT EXISTS method_name ON methods (name)\r\n"
   },
   "2d7201bf92994f5d080f706b2670c7b9b4415157e6cf5378cdb1a412dcadf4c1": {
     "describe": {
@@ -105,16 +125,6 @@
       }
     },
     "query": "SELECT * FROM currencies WHERE name = ?"
-  },
-  "4196d99311ae00b4b5a85cb0ecec997aba7847854cafad94880e3e64b9ae2d54": {
-    "describe": {
-      "columns": [],
-      "nullable": [],
-      "parameters": {
-        "Right": 0
-      }
-    },
-    "query": "CREATE TABLE IF NOT EXISTS accounts (\r\n    id INTEGER\r\n        PRIMARY KEY\r\n        NOT NULL,\r\n    name TEXT\r\n        UNIQUE\r\n        NOT NULL\r\n        CHECK (name != ''),\r\n    currency INTEGER\r\n        NOT NULL\r\n        REFERENCES currencies(id)\r\n        ON DELETE RESTRICT,\r\n    balance TEXT\r\n        NOT NULL\r\n        DEFAULT '0'\r\n        CHECK (balance != ''),\r\n    posted_balance TEXT\r\n        NOT NULL\r\n        DEFAULT '0'\r\n        CHECK (posted_balance != ''),\r\n    account_type INTEGER\r\n        NOT NULL\r\n        REFERENCES account_types(id)\r\n        ON DELETE RESTRICT\r\n        CHECK (account_type != '')\r\n)\r\nSTRICT"
   },
   "4e76dfc01ee707c16d797b7bf14d7f304c85d3a044f71ab782e9cd0712e1d533": {
     "describe": {
@@ -200,7 +210,7 @@
     },
     "query": "SELECT * FROM accounts_with_currency_and_type WHERE name = ?"
   },
-  "69fcb2f1674fbe882bc9e05e02fe1001367e2438ad28d682fb23e813804fb167": {
+  "6a2be8c76f189563b604baa6a58a593ff44ce1aa5975cdc51aafd404143a8a5f": {
     "describe": {
       "columns": [],
       "nullable": [],
@@ -208,17 +218,7 @@
         "Right": 0
       }
     },
-    "query": "CREATE TABLE IF NOT EXISTS account_types (\r\n    id INTEGER\r\n        PRIMARY KEY\r\n        NOT NULL,\r\n    name TEXT\r\n        UNIQUE\r\n        NOT NULL\r\n        CHECK (name != '')\r\n)\r\nSTRICT"
-  },
-  "83cf8dbb99ef48da7a5250a7a13c0f9a41ce3b137f527ba935014889ed9db411": {
-    "describe": {
-      "columns": [],
-      "nullable": [],
-      "parameters": {
-        "Right": 0
-      }
-    },
-    "query": "CREATE TABLE IF NOT EXISTS methods (\r\n    id INTEGER\r\n        PRIMARY KEY\r\n        NOT NULL,\r\n    name TEXT\r\n        UNIQUE\r\n        NOT NULL\r\n        CHECK (name != '')\r\n)\r\nSTRICT"
+    "query": "CREATE TABLE IF NOT EXISTS categories (\r\n    id INTEGER\r\n        PRIMARY KEY\r\n        NOT NULL,\r\n    name TEXT\r\n        UNIQUE\r\n        NOT NULL\r\n        CHECK (name != '')\r\n)\r\nSTRICT;\r\n\r\nCREATE UNIQUE INDEX IF NOT EXISTS category_name ON categories (name)\r\n"
   },
   "be4cd081f071eab53c258e75f7dedc53936dee6b5c3d03c21befcb84f090320e": {
     "describe": {
@@ -243,6 +243,26 @@
       }
     },
     "query": "SELECT * FROM account_types WHERE name = ?"
+  },
+  "cda9d6e1cec9f586432e3626128ea06870060c889939c2a6c6fe928237eb10f3": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Right": 0
+      }
+    },
+    "query": "CREATE TABLE IF NOT EXISTS transactions (\r\n    id INTEGER\r\n        PRIMARY KEY\r\n        NOT NULL,\r\n    date TEXT\r\n        NOT NULL\r\n        DEFAULT CURRENT_DATE\r\n        CHECK (date != ''),\r\n    posted_date TEXT\r\n        CHECK (posted_date != '')\r\n        CHECK (posted_date IS NULL\r\n            OR strftime('%s', posted_date) >= strftime('%s', date)\r\n        ),\r\n    category INTEGER\r\n        REFERENCES categories(id)\r\n        ON DELETE SET NULL,\r\n    amount TEXT\r\n        NOT NULL\r\n        CHECK (amount != ''),\r\n    debit_account INTEGER\r\n        REFERENCES accounts(id)\r\n        ON DELETE SET NULL,\r\n    credit_account INTEGER\r\n        REFERENCES accounts(id)\r\n        ON DELETE SET NULL,\r\n    authority TEXT\r\n        NOT NULL,\r\n    description TEXT\r\n        NOT NULL,\r\n    method INTEGER\r\n        REFERENCES methods(id)\r\n        ON DELETE SET NULL,\r\n    check_number INTEGER\r\n        CHECK (check_number IS NULL\r\n            OR (debit_account NOT NULL)\r\n        ),\r\n    UNIQUE (check_number, debit_account)\r\n)\r\nSTRICT;\r\n\r\nCREATE UNIQUE INDEX IF NOT EXISTS transaction_date ON transactions (date);\r\nCREATE UNIQUE INDEX IF NOT EXISTS transaction_posted_date ON transactions (posted_date);\r\nCREATE UNIQUE INDEX IF NOT EXISTS transaction_category ON transactions (category);\r\nCREATE UNIQUE INDEX IF NOT EXISTS transaction_amount ON transactions (amount);\r\nCREATE UNIQUE INDEX IF NOT EXISTS transaction_debit_account ON transactions (debit_account);\r\nCREATE UNIQUE INDEX IF NOT EXISTS transaction_credit_account ON transactions (credit_account);\r\nCREATE UNIQUE INDEX IF NOT EXISTS transaction_authority ON transactions (authority);\r\nCREATE UNIQUE INDEX IF NOT EXISTS transaction_description ON transactions (description);\r\nCREATE UNIQUE INDEX IF NOT EXISTS transaction_method ON transactions (method);\r\nCREATE UNIQUE INDEX IF NOT EXISTS transaction_check_number ON transactions (check_number);\r\nCREATE UNIQUE INDEX IF NOT EXISTS transaction_debit_account_change_magnitude ON transactions (debit_account, abs(amount));\r\nCREATE UNIQUE INDEX IF NOT EXISTS transaction_category_change_magnitude ON transactions (category, abs(amount))"
+  },
+  "cf1ee01e10a79d840d48cb33eb6303493a8ba44b4898e8081075e3ecba66221b": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Right": 0
+      }
+    },
+    "query": "CREATE TABLE IF NOT EXISTS account_types (\r\n    id INTEGER\r\n        PRIMARY KEY\r\n        NOT NULL,\r\n    name TEXT\r\n        UNIQUE\r\n        NOT NULL\r\n        CHECK (name != '')\r\n)\r\nSTRICT;\r\n\r\nCREATE UNIQUE INDEX IF NOT EXISTS account_type_name ON account_types (name)"
   },
   "cf3dafd3e0b6cb8f9d2f51bcf914481f8a3d2f685871a89530800dbfc96b4dca": {
     "describe": {
@@ -328,7 +348,7 @@
     },
     "query": "SELECT * FROM accounts_with_currency_and_type"
   },
-  "d7ea7db97ee9b8610359bee0f77d43c0505648c31b48dc640fd5e9109ebc99df": {
+  "e65d4e2ed5df3e16c6ef8d89524dc370daf45ef92ce694095246e82ba9f80876": {
     "describe": {
       "columns": [],
       "nullable": [],
@@ -336,27 +356,7 @@
         "Right": 0
       }
     },
-    "query": "CREATE TABLE IF NOT EXISTS categories (\r\n    id INTEGER\r\n        PRIMARY KEY\r\n        NOT NULL,\r\n    name TEXT\r\n        UNIQUE\r\n        NOT NULL\r\n        CHECK (name != '')\r\n)\r\nSTRICT"
-  },
-  "e0e04fc482342d82901d648bf96d344afd4181e77a4782dff516e499298b883b": {
-    "describe": {
-      "columns": [],
-      "nullable": [],
-      "parameters": {
-        "Right": 0
-      }
-    },
-    "query": "CREATE TABLE IF NOT EXISTS currencies (\r\n    id INTEGER\r\n        PRIMARY KEY\r\n        NOT NULL,\r\n    symbol TEXT\r\n        NOT NULL,\r\n    name TEXT\r\n        UNIQUE\r\n        NOT NULL\r\n        CHECK (name != ''),\r\n    precision INTEGER\r\n        NOT NULL\r\n        DEFAULT 2,\r\n    thousand_separator TEXT\r\n        NOT NULL\r\n        DEFAULT ',',\r\n    decimal_separator TEXT\r\n        NOT NULL\r\n        DEFAULT '.'\r\n)\r\nSTRICT"
-  },
-  "ec36000e5f5ea6f2dabdd4906f15910e1f257198b03713b6d995a7b31c448537": {
-    "describe": {
-      "columns": [],
-      "nullable": [],
-      "parameters": {
-        "Right": 0
-      }
-    },
-    "query": "CREATE TABLE IF NOT EXISTS transactions (\r\n    id INTEGER\r\n        PRIMARY KEY\r\n        NOT NULL,\r\n    date TEXT\r\n        NOT NULL\r\n        DEFAULT CURRENT_DATE\r\n        CHECK (date != ''),\r\n    posted_date TEXT\r\n        CHECK (posted_date != '')\r\n        CHECK (posted_date IS NULL\r\n            OR strftime('%s', posted_date) >= strftime('%s', date)\r\n        ),\r\n    category INTEGER\r\n        REFERENCES categories(id)\r\n        ON DELETE SET NULL,\r\n    amount TEXT\r\n        NOT NULL\r\n        CHECK (amount != ''),\r\n    debit_account INTEGER\r\n        REFERENCES accounts(id)\r\n        ON DELETE SET NULL,\r\n    credit_account INTEGER\r\n        REFERENCES accounts(id)\r\n        ON DELETE SET NULL,\r\n    authority TEXT\r\n        NOT NULL,\r\n    description TEXT\r\n        NOT NULL,\r\n    method INTEGER\r\n        REFERENCES methods(id)\r\n        ON DELETE SET NULL,\r\n    check_number INTEGER\r\n        CHECK (check_number IS NULL\r\n            OR (debit_account NOT NULL)\r\n        ),\r\n    UNIQUE (check_number, debit_account)\r\n)\r\nSTRICT"
+    "query": "CREATE TABLE IF NOT EXISTS currencies (\r\n    id INTEGER\r\n        PRIMARY KEY\r\n        NOT NULL,\r\n    symbol TEXT\r\n        NOT NULL,\r\n    name TEXT\r\n        UNIQUE\r\n        NOT NULL\r\n        CHECK (name != ''),\r\n    precision INTEGER\r\n        NOT NULL\r\n        DEFAULT 2,\r\n    thousand_separator TEXT\r\n        NOT NULL\r\n        DEFAULT ',',\r\n    decimal_separator TEXT\r\n        NOT NULL\r\n        DEFAULT '.'\r\n)\r\nSTRICT;\r\n\r\nCREATE UNIQUE INDEX IF NOT EXISTS currency_name ON currencies (name)\r\n"
   },
   "f2bd7da93d3e947e57782a3d10fdd33a8a2a53f9ee7f834779689da750f32520": {
     "describe": {

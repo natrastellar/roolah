@@ -24,4 +24,6 @@ CREATE TABLE IF NOT EXISTS accounts (
         ON DELETE RESTRICT
         CHECK (account_type != '')
 )
-STRICT
+STRICT;
+
+CREATE UNIQUE INDEX IF NOT EXISTS account_name ON accounts (name)

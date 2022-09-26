@@ -18,4 +18,6 @@ CREATE TABLE IF NOT EXISTS currencies (
         NOT NULL
         DEFAULT '.'
 )
-STRICT
+STRICT;
+
+CREATE UNIQUE INDEX IF NOT EXISTS currency_name ON currencies (name)
