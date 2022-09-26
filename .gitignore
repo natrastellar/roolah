@@ -1,3 +1,5 @@
 /target
+/migrations
 /*.db
 /*.db-wal
+/*.db-shm
