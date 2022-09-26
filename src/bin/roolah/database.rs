@@ -24,8 +24,23 @@ async fn create_connection() -> Result<SqliteConnection> {
         .into_diagnostic()
 }
 
-pub async fn init() -> Result<SqliteConnection> {
+pub async fn init(clear: bool) -> Result<SqliteConnection> {
     let mut conn = create_connection().await.wrap_err("failed to connect")?;
+    if clear {
+        sqlx::query!(
+            "DROP TABLE IF EXISTS transactions;
+            DROP TABLE IF EXISTS accounts;
+            DROP TABLE IF EXISTS account_types;
+            DROP TABLE IF EXISTS currencies;
+            DROP TABLE IF EXISTS categories;
+            DROP TABLE IF EXISTS methods;
+            "
+        )
+        .execute(&mut conn)
+        .await
+        .into_diagnostic()
+        .wrap_err("failed to drop tables")?;
+    }
     create_tables(&mut conn)
         .await
         .wrap_err("failed to create tables")?;

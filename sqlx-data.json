@@ -348,6 +348,16 @@
     },
     "query": "SELECT * FROM accounts_with_currency_and_type"
   },
+  "e53c51627088ef85471fce3198af32093813ba2cde6d6253c83bad1d7cc171d3": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Right": 0
+      }
+    },
+    "query": "DROP TABLE IF EXISTS transactions;\n            DROP TABLE IF EXISTS accounts;\n            DROP TABLE IF EXISTS account_types;\n            DROP TABLE IF EXISTS currencies;\n            DROP TABLE IF EXISTS categories;\n            DROP TABLE IF EXISTS methods;\n            "
+  },
   "e65d4e2ed5df3e16c6ef8d89524dc370daf45ef92ce694095246e82ba9f80876": {
     "describe": {
       "columns": [],
