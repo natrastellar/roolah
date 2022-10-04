@@ -1,11 +1,10 @@
 use super::{super::finance::Currency, account::Account, tag::Tag};
-use core::{
-    fmt::Display,
-    hash::{Hash, Hasher},
-};
 use rust_decimal::Decimal;
 use sqlx::FromRow;
-use std::fmt;
+use std::{
+    fmt::{self, Display},
+    hash::{Hash, Hasher},
+};
 use time::Date;
 
 #[derive(Debug, Clone)]

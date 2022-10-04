@@ -6,11 +6,17 @@ use sqlx::{
     Decode, Encode, Sqlite, Type,
 };
 
-pub struct DbDecimal(Decimal);
+pub struct DbDecimal(pub Decimal);
 
 impl From<Decimal> for DbDecimal {
     fn from(dec: Decimal) -> Self {
         Self(dec)
+    }
+}
+
+impl Into<Decimal> for DbDecimal {
+    fn into(self) -> Decimal {
+        self.0
     }
 }
 

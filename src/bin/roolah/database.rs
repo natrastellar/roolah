@@ -7,6 +7,7 @@ use sqlx::{
 mod account;
 mod currency;
 mod error;
+mod tables;
 
 pub use account::*;
 pub use error::Error as DatabaseError;
@@ -24,18 +25,31 @@ async fn create_connection() -> Result<SqliteConnection> {
         .into_diagnostic()
 }
 
+macro_rules! drop_existing_tables {
+    ($($table:expr),*) => {
+        (|| {
+            let mut s = String::new();
+            $(
+                s += "DROP TABLE IF EXISTS ";
+                s += $table;
+                s += ";";
+            )*
+            s
+        })()
+    };
+}
+
 pub async fn init(clear: bool) -> Result<SqliteConnection> {
     let mut conn = create_connection().await.wrap_err("failed to connect")?;
     if clear {
-        sqlx::query!(
-            "DROP TABLE IF EXISTS transactions;
-            DROP TABLE IF EXISTS accounts;
-            DROP TABLE IF EXISTS account_types;
-            DROP TABLE IF EXISTS currencies;
-            DROP TABLE IF EXISTS categories;
-            DROP TABLE IF EXISTS methods;
-            "
-        )
+        sqlx::query(&drop_existing_tables!(
+            tables::TRANSACTIONS,
+            tables::ACCOUNTS,
+            tables::ACCOUNT_TYPES,
+            tables::CURRENCIES,
+            tables::CATEGORIES,
+            tables::METHODS
+        ))
         .execute(&mut conn)
         .await
         .into_diagnostic()

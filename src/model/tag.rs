@@ -1,9 +1,8 @@
-use core::{
-    fmt::Display,
+use sqlx::FromRow;
+use std::{
+    fmt::{self, Display},
     hash::{Hash, Hasher},
 };
-use std::fmt;
-use sqlx::FromRow;
 
 #[derive(Debug, Clone, FromRow)]
 pub struct Tag {

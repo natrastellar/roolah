@@ -1,0 +1,20 @@
+[package]
+name = "roolah_derive"
+version = "0.1.0"
+authors = ["natrastellar"]
+edition = "2021"
+description = "Derive procedural macros used by the roolah crate."
+# documentation = 
+# readme = 
+# homepage = 
+repository = "https://github.com/natrastellar/roolah"
+license = "AGPL-3.0-or-later"
+keywords = []
+categories = []
+
+[lib]
+proc-macro = true
+
+[dependencies]
+syn = "1.0"
+quote = "1.0"

@@ -13,6 +13,7 @@ keywords = []
 categories = []
 
 [dependencies]
+roolah_derive = { version = "0.1", path = "derive" }
 miette = { version = "5.3", features = ["fancy"] }
 thiserror = "1.0"
 time = "0.3"

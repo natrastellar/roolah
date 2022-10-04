@@ -1,20 +1,18 @@
-use super::{
-    super::finance::{Currency, CurrencyFormat},
-    Tag,
-};
+use super::{CurrencyRecord, DbDecimal, Tag};
+use crate::finance::Currency;
 use core::{
     fmt::Display,
     hash::{Hash, Hasher},
 };
-use std::fmt;
 use rust_decimal::Decimal;
-use sqlx::FromRow;
+use sqlx::{sqlite::SqliteRow, FromRow, Row};
+use std::fmt;
 
 #[derive(Debug, Clone)]
 pub struct Account<'a> {
     pub id: i64,
     pub name: String,
-    pub currency: CurrencyFormat<'a>,
+    pub currency: CurrencyRecord<'a>,
     pub balance: Decimal,
     pub posted_balance: Decimal,
     pub account_type: AccountType,
@@ -39,8 +37,24 @@ impl Display for Account<'_> {
         f.write_fmt(format_args!(
             "{}: {}",
             self.name,
-            Currency::new(self.balance, self.currency.clone())
+            Currency::new(self.balance, self.currency.format.clone())
         ))
+    }
+}
+
+impl FromRow<'_, SqliteRow> for Account<'_> {
+    fn from_row(row: &SqliteRow) -> Result<Self, sqlx::Error> {
+        Ok(Self {
+            id: row.try_get("id")?,
+            name: row.try_get("name")?,
+            currency: CurrencyRecord::from_row(&row)?,
+            balance: row.try_get::<DbDecimal, &str>("balance")?.into(),
+            posted_balance: row.try_get::<DbDecimal, &str>("posted_balance")?.into(),
+            account_type: AccountType::new(
+                row.try_get("account_type")?,
+                row.try_get("account_type_name")?,
+            ),
+        })
     }
 }
 
@@ -48,6 +62,14 @@ impl Display for Account<'_> {
 pub struct AccountType {
     #[sqlx(flatten)]
     pub tag: Tag,
+}
+
+impl AccountType {
+    pub fn new(id: i64, name: String) -> Self {
+        Self {
+            tag: Tag { id, name },
+        }
+    }
 }
 
 impl From<Tag> for AccountType {
