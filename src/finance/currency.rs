@@ -3,7 +3,10 @@ use core::{
     ops::{Add, Div, Mul, Sub},
 };
 use rust_decimal::Decimal;
-use std::{borrow::Cow, fmt};
+use std::{
+    borrow::Cow,
+    fmt::{self, Formatter},
+};
 
 pub mod currencies;
 pub use currencies::*;
@@ -49,14 +52,20 @@ impl<'a> CurrencyFormat<'a> {
             name: self.name.into_owned().into(),
             precision: self.precision,
             thousand_separator: self.thousand_separator.into_owned().into(),
-            decimal_separator: self.decimal_separator.into_owned().into()
+            decimal_separator: self.decimal_separator.into_owned().into(),
         }
     }
 }
 
 impl Clone for CurrencyFormat<'_> {
     fn clone(&self) -> Self {
-        Self { symbol: self.symbol.clone(), name: self.name.clone(), precision: self.precision.clone(), thousand_separator: self.thousand_separator.clone(), decimal_separator: self.decimal_separator.clone() }
+        Self {
+            symbol: self.symbol.clone(),
+            name: self.name.clone(),
+            precision: self.precision.clone(),
+            thousand_separator: self.thousand_separator.clone(),
+            decimal_separator: self.decimal_separator.clone(),
+        }
     }
 }
 
@@ -136,14 +145,14 @@ impl<T> Display for Currency<'_, T>
 where
     T: Into<Decimal> + Copy,
 {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         let symbol = &self.format.symbol;
         let value: Decimal = self.value.into();
         let value_str = self.format.format_value(self.value);
         if !value.is_zero() && value.is_sign_negative() {
-            f.write_fmt(format_args!("{symbol} ({value_str})"))
+            write!(f, "{symbol} ({value_str})")
         } else {
-            f.write_fmt(format_args!("{symbol} {value_str}"))
+            write!(f, "{symbol} {value_str}")
         }
     }
 }

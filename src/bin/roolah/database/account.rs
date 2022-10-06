@@ -1,23 +1,75 @@
 use super::{
     currency,
-    tables::{self, AccountTypesColumn, AccountsColumn},
+    tables::{
+        self, AccountTypesColumn, AccountsColumn, AccountsWithCurrencyAndTypeColumn,
+        CurrenciesColumn,
+    },
     DatabaseError,
 };
 use miette::{Context, IntoDiagnostic, Result};
 use roolah::{
     finance::CurrencyFormat,
     model::{Account, AccountType},
-    ColumnEnum,
 };
 use rust_decimal::Decimal;
 use sqlx::{Connection, SqliteConnection};
 
 pub async fn create_accounts_view(conn: &mut SqliteConnection) -> Result<()> {
-    sqlx::query_file!("src/bin/roolah/database/sql/create_accounts_with_currency_and_type_view.sql")
-        .execute(conn)
-        .await
-        .map(|_| ())
-        .into_diagnostic()
+    sqlx::query(&format!(
+        "CREATE VIEW IF NOT EXISTS {view} AS
+        SELECT
+            {accounts}.{id} AS {view_id},
+            {accounts}.{name} AS {view_name},
+            {accounts}.{currency} AS {view_currency_id},
+            {accounts}.{balance} AS {view_balance},w
+            {accounts}.{posted_balance} AS {view_posted_balance},
+            {accounts}.{account_type} AS {view_account_type_id},
+            {currencies}.{symbol} AS {view_symbol},
+            {currencies}.{currency_name} AS {view_currency_name},
+            {currencies}.{precision} AS {view_precision},
+            {currencies}.{thousand_separator} AS {view_thousand_separator},
+            {currencies}.{decimal_separator} AS {view_decimal_separator},
+            {account_types}.{account_type_name} as {view_account_type_name}
+        FROM {accounts}
+        INNER JOIN {account_types}
+            ON {accounts}.{account_type} = {account_types}.{account_type_id}
+        INNER JOIN {currencies}
+            ON {accounts}.{currency} = {currencies}.{currency_id}",
+        view = tables::ACCOUNTS_WITH_CURRENCY_AND_TYPE,
+        accounts = tables::ACCOUNTS,
+        id = AccountsColumn::Id,
+        view_id = AccountsWithCurrencyAndTypeColumn::Id,
+        name = AccountsColumn::Name,
+        view_name = AccountsWithCurrencyAndTypeColumn::Name,
+        currency = AccountsColumn::Currency,
+        view_currency_id = AccountsWithCurrencyAndTypeColumn::CurrencyId,
+        balance = AccountsColumn::Balance,
+        view_balance = AccountsWithCurrencyAndTypeColumn::Balance,
+        posted_balance = AccountsColumn::PostedBalance,
+        view_posted_balance = AccountsWithCurrencyAndTypeColumn::PostedBalance,
+        account_type = AccountsColumn::AccountType,
+        view_account_type_id = AccountsWithCurrencyAndTypeColumn::AccountTypeId,
+        currencies = tables::CURRENCIES,
+        symbol = CurrenciesColumn::Symbol,
+        view_symbol = AccountsWithCurrencyAndTypeColumn::Symbol,
+        currency_name = CurrenciesColumn::Name,
+        view_currency_name = AccountsWithCurrencyAndTypeColumn::CurrencyName,
+        precision = CurrenciesColumn::Precision,
+        view_precision = AccountsWithCurrencyAndTypeColumn::Precision,
+        thousand_separator = CurrenciesColumn::ThousandSeparator,
+        view_thousand_separator = AccountsWithCurrencyAndTypeColumn::ThousandSeparator,
+        decimal_separator = CurrenciesColumn::DecimalSeparator,
+        view_decimal_separator = AccountsWithCurrencyAndTypeColumn::DecimalSeparator,
+        account_types = tables::ACCOUNT_TYPES,
+        account_type_name = AccountTypesColumn::Name,
+        view_account_type_name = AccountsWithCurrencyAndTypeColumn::AccountTypeName,
+        account_type_id = AccountTypesColumn::Id,
+        currency_id = CurrenciesColumn::Id,
+    ))
+    .execute(conn)
+    .await
+    .map(|_| ())
+    .into_diagnostic()
 }
 
 pub async fn create_account<'a>(
@@ -36,12 +88,12 @@ pub async fn create_account<'a>(
         .wrap_err("failed to create the currency")?;
 
     let inserted = sqlx::query(&format!(
-        "INSERT OR IGNORE INTO {} ({}, {}, {})
+        "INSERT OR IGNORE INTO {accounts} ({name}, {currency}, {account_type})
         VALUES (?, ?, ?)",
-        tables::ACCOUNTS,
-        AccountsColumn::Name.name(),
-        AccountsColumn::Currency.name(),
-        AccountsColumn::AccountType.name(),
+        accounts = tables::ACCOUNTS,
+        name = AccountsColumn::Name,
+        currency = AccountsColumn::Currency,
+        account_type = AccountsColumn::AccountType,
     ))
     .bind(&name)
     .bind(currency_id)
@@ -90,9 +142,9 @@ pub async fn get_account_by_name(
         .wrap_err("failed to create accounts view")?;
 
     sqlx::query_as(&format!(
-        "SELECT * FROM {} WHERE {} = ?",
-        tables::ACCOUNTS_WITH_CURRENCY_AND_TYPE,
-        AccountsColumn::Name.name()
+        "SELECT * FROM {accounts_view} WHERE {name} = ?",
+        accounts_view = tables::ACCOUNTS_WITH_CURRENCY_AND_TYPE,
+        name = AccountsColumn::Name
     ))
     .bind(&name)
     .fetch_one(conn)
@@ -120,10 +172,10 @@ async fn create_account_type(
     conn: &mut SqliteConnection,
 ) -> Result<AccountType> {
     let inserted = sqlx::query_as(&format!(
-        "INSERT OR IGNORE INTO {} ({})
+        "INSERT OR IGNORE INTO {account_types} ({name})
         VALUES (?)",
-        tables::ACCOUNT_TYPES,
-        AccountTypesColumn::Name.name()
+        account_types = tables::ACCOUNT_TYPES,
+        name = AccountTypesColumn::Name
     ))
     .bind(account_type)
     .fetch_optional(&mut *conn)
@@ -140,9 +192,9 @@ async fn create_account_type(
 
 async fn get_account_type(account_type: &str, conn: &mut SqliteConnection) -> Result<AccountType> {
     sqlx::query_as(&format!(
-        "SELECT * FROM {} WHERE {} = ?",
-        tables::ACCOUNT_TYPES,
-        AccountTypesColumn::Name.name()
+        "SELECT * FROM {account_types} WHERE {name} = ?",
+        account_types = tables::ACCOUNT_TYPES,
+        name = AccountTypesColumn::Name
     ))
     .bind(account_type)
     .fetch_one(conn)

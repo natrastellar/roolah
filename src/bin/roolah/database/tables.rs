@@ -8,14 +8,12 @@ pub const CURRENCIES: &str = "currencies";
 pub const METHODS: &str = "methods";
 pub const TRANSACTIONS: &str = "transactions";
 
-#[allow(dead_code)]
 #[derive(ColumnEnum)]
 pub enum AccountTypesColumn {
     Id,
     Name,
 }
 
-#[allow(dead_code)]
 #[derive(ColumnEnum)]
 pub enum AccountsColumn {
     Id,
@@ -26,7 +24,6 @@ pub enum AccountsColumn {
     AccountType,
 }
 
-#[allow(dead_code)]
 #[derive(ColumnEnum)]
 pub enum AccountsWithCurrencyAndTypeColumn {
     Id,
@@ -34,17 +31,15 @@ pub enum AccountsWithCurrencyAndTypeColumn {
     CurrencyId,
     Balance,
     PostedBalance,
-    AccountType,
+    AccountTypeId,
     Symbol,
     CurrencyName,
     Precision,
     ThousandSeparator,
     DecimalSeparator,
-    AccountTypeId,
     AccountTypeName,
 }
 
-#[allow(dead_code)]
 #[derive(ColumnEnum)]
 pub enum CategoriesColumn {
     Id,
@@ -61,14 +56,12 @@ pub enum CurrenciesColumn {
     DecimalSeparator,
 }
 
-#[allow(dead_code)]
 #[derive(ColumnEnum)]
 pub enum MethodsColumn {
     Id,
     Name,
 }
 
-#[allow(dead_code)]
 #[derive(ColumnEnum)]
 pub enum TransactionsColumn {
     Id,

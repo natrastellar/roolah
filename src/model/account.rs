@@ -6,7 +6,7 @@ use core::{
 };
 use rust_decimal::Decimal;
 use sqlx::{sqlite::SqliteRow, FromRow, Row};
-use std::fmt;
+use std::fmt::{self, Formatter};
 
 #[derive(Debug, Clone)]
 pub struct Account<'a> {
@@ -33,12 +33,13 @@ impl Hash for Account<'_> {
 }
 
 impl Display for Account<'_> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_fmt(format_args!(
-            "{}: {}",
-            self.name,
-            Currency::new(self.balance, self.currency.format.clone())
-        ))
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{name}: {balance}",
+            name = self.name,
+            balance = Currency::new(self.balance, self.currency.format.clone())
+        )
     }
 }
 
@@ -79,8 +80,8 @@ impl From<Tag> for AccountType {
 }
 
 impl Display for AccountType {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_fmt(format_args!("{}", self.tag))
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.tag)
     }
 }
 

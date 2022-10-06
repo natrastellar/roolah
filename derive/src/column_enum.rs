@@ -36,6 +36,12 @@ pub fn impl_column_enum(input: DeriveInput) -> TokenStream {
                 #match_self
             }
         }
+
+        impl std::fmt::Display for #name {
+            fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+                write!(f, "{}", (self as &dyn roolah::ColumnEnum).name())
+            }
+        }
     };
 
     expanded.into()

@@ -1,6 +1,6 @@
 use sqlx::FromRow;
 use std::{
-    fmt::{self, Display},
+    fmt::{self, Display, Formatter},
     hash::{Hash, Hasher},
 };
 
@@ -25,8 +25,8 @@ impl Hash for Tag {
 }
 
 impl Display for Tag {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str(&self.name)
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", &self.name)
     }
 }
 

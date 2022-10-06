@@ -3,7 +3,7 @@ use super::{
     DatabaseError,
 };
 use miette::{Context, IntoDiagnostic, Result};
-use roolah::{finance::CurrencyFormat, model::CurrencyRecord, ColumnEnum};
+use roolah::{finance::CurrencyFormat, model::CurrencyRecord};
 use sqlx::SqliteConnection;
 
 pub async fn create_currency(
@@ -11,18 +11,18 @@ pub async fn create_currency(
     conn: &mut SqliteConnection,
 ) -> Result<i64> {
     let inserted = sqlx::query_scalar(&format!(
-        r#"INSERT OR IGNORE INTO {0} ({1}, {2}, {3}, {4}, {5})
+        r#"INSERT OR IGNORE INTO {currencies} ({symbol}, {name}, {precision}, {thousand_separator}, {decimal_separator})
         VALUES (?, ?, ?, ?, ?)
         RETURNING
-            {6} as "{6}!"
+            {id} as "{id}!"
         "#,
-        tables::CURRENCIES,
-        CurrenciesColumn::Symbol.name(),
-        CurrenciesColumn::Name.name(),
-        CurrenciesColumn::Precision.name(),
-        CurrenciesColumn::ThousandSeparator.name(),
-        CurrenciesColumn::DecimalSeparator.name(),
-        CurrenciesColumn::Id.name()
+        currencies = tables::CURRENCIES,
+        symbol = CurrenciesColumn::Symbol,
+        name = CurrenciesColumn::Name,
+        precision = CurrenciesColumn::Precision,
+        thousand_separator = CurrenciesColumn::ThousandSeparator,
+        decimal_separator = CurrenciesColumn::DecimalSeparator,
+        id = CurrenciesColumn::Id
     ))
     .bind(&currency.symbol)
     .bind(&currency.name)
@@ -51,12 +51,16 @@ pub async fn get_currency_by_name(
     name: &str,
     conn: &mut SqliteConnection,
 ) -> Result<CurrencyRecord<'static>> {
-    sqlx::query_as("SELECT * FROM currencies WHERE name = ?")
-        .bind(&name)
-        .fetch_one(conn)
-        .await
-        .into_diagnostic()
-        .wrap_err("failed to get existing currency by name")
+    sqlx::query_as(&format!(
+        "SELECT * FROM {currencies} WHERE {name} = ?",
+        currencies = tables::CURRENCIES,
+        name = CurrenciesColumn::Name
+    ))
+    .bind(&name)
+    .fetch_one(conn)
+    .await
+    .into_diagnostic()
+    .wrap_err("failed to get existing currency by name")
 }
 
 //TODO Add tests

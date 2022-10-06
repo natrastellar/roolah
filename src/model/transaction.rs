@@ -2,7 +2,7 @@ use super::{super::finance::Currency, account::Account, tag::Tag};
 use rust_decimal::Decimal;
 use sqlx::FromRow;
 use std::{
-    fmt::{self, Display},
+    fmt::{self, Display, Formatter},
     hash::{Hash, Hasher},
 };
 use time::Date;
@@ -37,13 +37,17 @@ impl Hash for Transaction<'_> {
 }
 
 impl Display for Transaction<'_> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_fmt(format_args!(
-            "{} {} -> {} on {}",
-            self.amount, self.debit_account, self.credit_account, self.date
-        ))?;
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{amount} {debit} -> {credit} on {date}",
+            amount = self.amount,
+            debit = self.debit_account,
+            credit = self.credit_account,
+            date = self.date
+        )?;
         if self.description.is_empty() {
-            return f.write_fmt(format_args!(r#", "{}""#, self.description));
+            return write!(f, r#", "{}""#, self.description);
         }
         Ok(())
     }
@@ -62,8 +66,8 @@ impl From<Tag> for Category {
 }
 
 impl Display for Category {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_fmt(format_args!("{}", self.tag))
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.tag)
     }
 }
 
