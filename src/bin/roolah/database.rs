@@ -17,8 +17,9 @@ pub use account::*;
 pub use error::Error as DatabaseError;
 
 async fn create_connection() -> Result<SqliteConnection> {
+    const DATABASE_FILE: &str = "roolah.db"; //TODO user configurable? embed in the file? use as the file?
     let options = SqliteConnectOptions::new()
-            .filename("roolah.db") //TODO user configurable?
+            .filename(DATABASE_FILE)
             .create_if_missing(true)
             .journal_mode(SqliteJournalMode::Wal) // Faster (no network file support)
             .locking_mode(SqliteLockingMode::Exclusive) // Faster + prevents other app access + allows Wal to work on a VFS without shared-memory primitives
@@ -290,3 +291,5 @@ pub async fn close(conn: SqliteConnection) -> Result<()> {
     // Checkpoints in WAL mode
     conn.close().await.into_diagnostic()
 }
+
+//TODO Add tests

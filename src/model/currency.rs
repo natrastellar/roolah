@@ -43,3 +43,5 @@ impl FromRow<'_, SqliteRow> for CurrencyFormat<'_> {
         })
     }
 }
+
+//TODO Add tests
