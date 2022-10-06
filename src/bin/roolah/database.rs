@@ -47,18 +47,7 @@ macro_rules! drop_existing_tables {
 pub async fn init(clear: bool) -> Result<SqliteConnection> {
     let mut conn = create_connection().await.wrap_err("failed to connect")?;
     if clear {
-        sqlx::query(&drop_existing_tables!(
-            tables::TRANSACTIONS,
-            tables::ACCOUNTS,
-            tables::ACCOUNT_TYPES,
-            tables::CURRENCIES,
-            tables::CATEGORIES,
-            tables::METHODS
-        ))
-        .execute(&mut conn)
-        .await
-        .into_diagnostic()
-        .wrap_err("failed to drop tables")?;
+        drop_tables(&mut conn).await?;
     }
     create_tables(&mut conn)
         .await
@@ -66,9 +55,36 @@ pub async fn init(clear: bool) -> Result<SqliteConnection> {
     Ok(conn)
 }
 
+async fn drop_tables(conn: &mut SqliteConnection) -> Result<()> {
+    sqlx::query(&drop_existing_tables!(
+        tables::TRANSACTIONS,
+        tables::ACCOUNTS,
+        tables::ACCOUNT_TYPES,
+        tables::CURRENCIES,
+        tables::CATEGORIES,
+        tables::METHODS
+    ))
+    .execute(conn)
+    .await
+    .into_diagnostic()
+    .wrap_err("failed to drop tables")?;
+    Ok(())
+}
+
 async fn create_tables(conn: &mut SqliteConnection) -> Result<()> {
     let mut transaction = conn.begin().await.into_diagnostic()?;
 
+    create_currencies_table(&mut transaction).await?;
+    create_account_types_table(&mut transaction).await?;
+    create_accounts_table(&mut transaction).await?;
+    create_categories_table(&mut transaction).await?;
+    create_methods_table(&mut transaction).await?;
+    create_transactions_table(&mut transaction).await?;
+
+    transaction.commit().await.into_diagnostic()
+}
+
+async fn create_currencies_table(conn: &mut SqliteConnection) -> Result<()> {
     sqlx::query(&format!(
         "CREATE TABLE IF NOT EXISTS {currencies} (
             {id} INTEGER
@@ -100,10 +116,13 @@ async fn create_tables(conn: &mut SqliteConnection) -> Result<()> {
         thousand_separator = CurrenciesColumn::ThousandSeparator,
         decimal_separator = CurrenciesColumn::DecimalSeparator,
     ))
-    .execute(&mut transaction)
+    .execute(conn)
     .await
     .into_diagnostic()?;
+    Ok(())
+}
 
+async fn create_account_types_table(conn: &mut SqliteConnection) -> Result<()> {
     sqlx::query(&format!(
         "CREATE TABLE IF NOT EXISTS {account_types} (
             {id} INTEGER
@@ -120,10 +139,13 @@ async fn create_tables(conn: &mut SqliteConnection) -> Result<()> {
         id = AccountTypesColumn::Id,
         name = AccountTypesColumn::Name
     ))
-    .execute(&mut transaction)
+    .execute(conn)
     .await
     .into_diagnostic()?;
+    Ok(())
+}
 
+async fn create_accounts_table(conn: &mut SqliteConnection) -> Result<()> {
     sqlx::query(&format!(
         "CREATE TABLE IF NOT EXISTS {accounts} (
             {id} INTEGER
@@ -165,10 +187,13 @@ async fn create_tables(conn: &mut SqliteConnection) -> Result<()> {
         account_types = tables::ACCOUNT_TYPES,
         account_type_id = AccountTypesColumn::Id
     ))
-    .execute(&mut transaction)
+    .execute(conn)
     .await
     .into_diagnostic()?;
+    Ok(())
+}
 
+async fn create_categories_table(conn: &mut SqliteConnection) -> Result<()> {
     sqlx::query(&format!(
         "CREATE TABLE IF NOT EXISTS {categories} (
             {id} INTEGER
@@ -185,10 +210,13 @@ async fn create_tables(conn: &mut SqliteConnection) -> Result<()> {
         id = CategoriesColumn::Id,
         name = CategoriesColumn::Name,
     ))
-    .execute(&mut transaction)
+    .execute(conn)
     .await
     .into_diagnostic()?;
+    Ok(())
+}
 
+async fn create_methods_table(conn: &mut SqliteConnection) -> Result<()> {
     sqlx::query(&format!(
         "CREATE TABLE IF NOT EXISTS {methods} (
             {id} INTEGER
@@ -205,10 +233,13 @@ async fn create_tables(conn: &mut SqliteConnection) -> Result<()> {
         id = MethodsColumn::Id,
         name = MethodsColumn::Name,
     ))
-    .execute(&mut transaction)
+    .execute(conn)
     .await
     .into_diagnostic()?;
+    Ok(())
+}
 
+async fn create_transactions_table(conn: &mut SqliteConnection) -> Result<()> {
     sqlx::query(&format!(
         "CREATE TABLE IF NOT EXISTS {transactions} (
             {id} INTEGER
@@ -280,11 +311,10 @@ async fn create_tables(conn: &mut SqliteConnection) -> Result<()> {
         method_id = MethodsColumn::Id,
         check_number = TransactionsColumn::CheckNumber,
     ))
-    .execute(&mut transaction)
+    .execute(conn)
     .await
     .into_diagnostic()?;
-
-    transaction.commit().await.into_diagnostic()
+    Ok(())
 }
 
 pub async fn close(conn: SqliteConnection) -> Result<()> {
