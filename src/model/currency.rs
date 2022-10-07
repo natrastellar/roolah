@@ -36,7 +36,10 @@ impl FromRow<'_, SqliteRow> for CurrencyFormat<'_> {
     fn from_row(row: &SqliteRow) -> Result<Self, sqlx::Error> {
         Ok(Self {
             symbol: row.try_get::<String, &str>("symbol")?.into(),
-            name: row.try_get::<String, &str>("currency_name")?.into(),
+            name: row
+                .try_get::<String, &str>("currency_name")
+                .or_else(|_| row.try_get::<String, &str>("name"))?
+                .into(),
             precision: row.try_get("precision")?,
             thousand_separator: row.try_get::<String, &str>("thousand_separator")?.into(),
             decimal_separator: row.try_get::<String, &str>("decimal_separator")?.into(),
