@@ -7,8 +7,8 @@ use roolah::{finance::CurrencyFormat, model::CurrencyRecord};
 use sqlx::SqliteConnection;
 
 pub async fn create_currency(
-    currency: &CurrencyFormat<'_>,
     conn: &mut SqliteConnection,
+    currency: &CurrencyFormat<'_>,
 ) -> Result<i64> {
     let inserted = sqlx::query_scalar(&format!(
         r#"INSERT OR IGNORE INTO {currencies} ({symbol}, {name}, {precision}, {thousand_separator}, {decimal_separator})
@@ -38,7 +38,7 @@ pub async fn create_currency(
         return Ok(id);
     }
 
-    let existing: CurrencyRecord = get_currency_by_name(&currency.name, conn).await?;
+    let existing: CurrencyRecord = get_currency_by_name(conn, &currency.name).await?;
 
     if existing.format != *currency {
         return Err(DatabaseError::CurrencyAlreadyExists(existing)).into_diagnostic();
@@ -48,8 +48,8 @@ pub async fn create_currency(
 }
 
 pub async fn get_currency_by_name(
-    name: &str,
     conn: &mut SqliteConnection,
+    name: &str,
 ) -> Result<CurrencyRecord<'static>> {
     sqlx::query_as(&format!(
         "SELECT * FROM {currencies} WHERE {name} = ?",

@@ -80,10 +80,10 @@ pub async fn create_account<'a>(
 ) -> Result<Account<'a>> {
     let mut transaction = conn.begin().await.into_diagnostic()?;
 
-    let account_type: AccountType = create_account_type(account_type, &mut transaction)
+    let account_type: AccountType = create_account_type(&mut transaction, account_type)
         .await
         .wrap_err("failed to create the account_type")?;
-    let currency_id = currency::create_currency(currency, &mut transaction)
+    let currency_id = currency::create_currency(&mut transaction, currency)
         .await
         .wrap_err("failed to create the currency")?;
 
@@ -110,7 +110,7 @@ pub async fn create_account<'a>(
             .into_diagnostic()
             .wrap_err("failed to commit")?;
 
-        return get_account_by_name(name, conn)
+        return get_account_by_name(conn, name)
             .await
             .wrap_err("failed to get inserted account");
     }
@@ -121,7 +121,7 @@ pub async fn create_account<'a>(
         .into_diagnostic()
         .wrap_err("failed to rollback")?;
 
-    let existing_account: Account = get_account_by_name(name, conn).await?;
+    let existing_account: Account = get_account_by_name(conn, name).await?;
     if existing_account.currency.id != currency_id
         || existing_account.balance != Decimal::ZERO
         || existing_account.posted_balance != Decimal::ZERO
@@ -134,8 +134,8 @@ pub async fn create_account<'a>(
 }
 
 pub async fn get_account_by_name(
-    name: &str,
     conn: &mut SqliteConnection,
+    name: &str,
 ) -> Result<Account<'static>> {
     create_accounts_view(conn)
         .await
@@ -168,8 +168,8 @@ pub async fn get_all_accounts(conn: &mut SqliteConnection) -> Result<Vec<Account
 }
 
 async fn create_account_type(
-    account_type: &str,
     conn: &mut SqliteConnection,
+    account_type: &str,
 ) -> Result<AccountType> {
     let inserted = sqlx::query_as(&format!(
         "INSERT OR IGNORE INTO {account_types} ({name})
@@ -187,10 +187,10 @@ async fn create_account_type(
         return Ok(account_type);
     }
 
-    get_account_type(account_type, conn).await
+    get_account_type(conn, account_type).await
 }
 
-async fn get_account_type(account_type: &str, conn: &mut SqliteConnection) -> Result<AccountType> {
+async fn get_account_type(conn: &mut SqliteConnection, account_type: &str) -> Result<AccountType> {
     sqlx::query_as(&format!(
         "SELECT * FROM {account_types} WHERE {name} = ?",
         account_types = table_identifiers::ACCOUNT_TYPES,
