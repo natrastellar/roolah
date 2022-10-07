@@ -1,5 +1,5 @@
 use super::{
-    tables::{self, CurrenciesColumn},
+    table_identifiers::{self, CurrenciesColumn},
     DatabaseError,
 };
 use miette::{Context, IntoDiagnostic, Result};
@@ -16,7 +16,7 @@ pub async fn create_currency(
         RETURNING
             {id} as "{id}!"
         "#,
-        currencies = tables::CURRENCIES,
+        currencies = table_identifiers::CURRENCIES,
         symbol = CurrenciesColumn::Symbol,
         name = CurrenciesColumn::Name,
         precision = CurrenciesColumn::Precision,
@@ -53,7 +53,7 @@ pub async fn get_currency_by_name(
 ) -> Result<CurrencyRecord<'static>> {
     sqlx::query_as(&format!(
         "SELECT * FROM {currencies} WHERE {name} = ?",
-        currencies = tables::CURRENCIES,
+        currencies = table_identifiers::CURRENCIES,
         name = CurrenciesColumn::Name
     ))
     .bind(&name)

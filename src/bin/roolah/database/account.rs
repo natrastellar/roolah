@@ -1,6 +1,6 @@
 use super::{
     currency,
-    tables::{
+    table_identifiers::{
         self, AccountTypesColumn, AccountsColumn, AccountsWithCurrencyAndTypeColumn,
         CurrenciesColumn,
     },
@@ -35,8 +35,8 @@ pub async fn create_accounts_view(conn: &mut SqliteConnection) -> Result<()> {
             ON {accounts}.{account_type} = {account_types}.{account_type_id}
         INNER JOIN {currencies}
             ON {accounts}.{currency} = {currencies}.{currency_id}",
-        view = tables::ACCOUNTS_WITH_CURRENCY_AND_TYPE,
-        accounts = tables::ACCOUNTS,
+        view = table_identifiers::ACCOUNTS_WITH_CURRENCY_AND_TYPE,
+        accounts = table_identifiers::ACCOUNTS,
         id = AccountsColumn::Id,
         view_id = AccountsWithCurrencyAndTypeColumn::Id,
         name = AccountsColumn::Name,
@@ -49,7 +49,7 @@ pub async fn create_accounts_view(conn: &mut SqliteConnection) -> Result<()> {
         view_posted_balance = AccountsWithCurrencyAndTypeColumn::PostedBalance,
         account_type = AccountsColumn::AccountType,
         view_account_type_id = AccountsWithCurrencyAndTypeColumn::AccountTypeId,
-        currencies = tables::CURRENCIES,
+        currencies = table_identifiers::CURRENCIES,
         symbol = CurrenciesColumn::Symbol,
         view_symbol = AccountsWithCurrencyAndTypeColumn::Symbol,
         currency_name = CurrenciesColumn::Name,
@@ -60,7 +60,7 @@ pub async fn create_accounts_view(conn: &mut SqliteConnection) -> Result<()> {
         view_thousand_separator = AccountsWithCurrencyAndTypeColumn::ThousandSeparator,
         decimal_separator = CurrenciesColumn::DecimalSeparator,
         view_decimal_separator = AccountsWithCurrencyAndTypeColumn::DecimalSeparator,
-        account_types = tables::ACCOUNT_TYPES,
+        account_types = table_identifiers::ACCOUNT_TYPES,
         account_type_name = AccountTypesColumn::Name,
         view_account_type_name = AccountsWithCurrencyAndTypeColumn::AccountTypeName,
         account_type_id = AccountTypesColumn::Id,
@@ -90,7 +90,7 @@ pub async fn create_account<'a>(
     let inserted = sqlx::query(&format!(
         "INSERT OR IGNORE INTO {accounts} ({name}, {currency}, {account_type})
         VALUES (?, ?, ?)",
-        accounts = tables::ACCOUNTS,
+        accounts = table_identifiers::ACCOUNTS,
         name = AccountsColumn::Name,
         currency = AccountsColumn::Currency,
         account_type = AccountsColumn::AccountType,
@@ -143,7 +143,7 @@ pub async fn get_account_by_name(
 
     sqlx::query_as(&format!(
         "SELECT * FROM {accounts_view} WHERE {name} = ?",
-        accounts_view = tables::ACCOUNTS_WITH_CURRENCY_AND_TYPE,
+        accounts_view = table_identifiers::ACCOUNTS_WITH_CURRENCY_AND_TYPE,
         name = AccountsColumn::Name
     ))
     .bind(&name)
@@ -160,7 +160,7 @@ pub async fn get_all_accounts(conn: &mut SqliteConnection) -> Result<Vec<Account
 
     sqlx::query_as(&format!(
         "SELECT * FROM {}",
-        tables::ACCOUNTS_WITH_CURRENCY_AND_TYPE
+        table_identifiers::ACCOUNTS_WITH_CURRENCY_AND_TYPE
     ))
     .fetch_all(&mut *conn)
     .await
@@ -174,7 +174,7 @@ async fn create_account_type(
     let inserted = sqlx::query_as(&format!(
         "INSERT OR IGNORE INTO {account_types} ({name})
         VALUES (?)",
-        account_types = tables::ACCOUNT_TYPES,
+        account_types = table_identifiers::ACCOUNT_TYPES,
         name = AccountTypesColumn::Name
     ))
     .bind(account_type)
@@ -193,7 +193,7 @@ async fn create_account_type(
 async fn get_account_type(account_type: &str, conn: &mut SqliteConnection) -> Result<AccountType> {
     sqlx::query_as(&format!(
         "SELECT * FROM {account_types} WHERE {name} = ?",
-        account_types = tables::ACCOUNT_TYPES,
+        account_types = table_identifiers::ACCOUNT_TYPES,
         name = AccountTypesColumn::Name
     ))
     .bind(account_type)
