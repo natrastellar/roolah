@@ -94,7 +94,7 @@ async fn create_account_types_table(conn: &mut SqliteConnection) -> Result<()> {
                 NOT NULL,
             {name} TEXT
                 UNIQUE
-                NOT NULLs
+                NOT NULL
                 CHECK ({name} != '')
         )
         STRICT;
