@@ -21,7 +21,7 @@ pub async fn create_accounts_view(conn: &mut SqliteConnection) -> Result<()> {
             {accounts}.{id} AS {view_id},
             {accounts}.{name} AS {view_name},
             {accounts}.{currency} AS {view_currency_id},
-            {accounts}.{balance} AS {view_balance},w
+            {accounts}.{balance} AS {view_balance},
             {accounts}.{posted_balance} AS {view_posted_balance},
             {accounts}.{account_type} AS {view_account_type_id},
             {currencies}.{symbol} AS {view_symbol},
