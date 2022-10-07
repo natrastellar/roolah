@@ -10,7 +10,7 @@ mod error;
 mod schema;
 mod table_identifiers;
 
-pub use account::*;
+pub use account::{create_account, get_account_by_name, get_all_accounts};
 pub use error::Error as DatabaseError;
 
 async fn create_connection() -> Result<SqliteConnection> {
