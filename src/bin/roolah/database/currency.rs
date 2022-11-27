@@ -1,9 +1,10 @@
 use super::{
+    model::CurrencyRecord,
     table_identifiers::{self, CurrenciesColumn},
     DatabaseError,
 };
 use miette::{Context, IntoDiagnostic, Result};
-use roolah::{finance::CurrencyFormat, model::CurrencyRecord};
+use roolah::finance::CurrencyFormat;
 use sqlx::SqliteConnection;
 
 pub async fn create_currency(
@@ -56,7 +57,7 @@ pub async fn get_currency_by_name(
         currencies = table_identifiers::CURRENCIES,
         name = CurrenciesColumn::Name
     ))
-    .bind(&name)
+    .bind(name)
     .fetch_one(conn)
     .await
     .into_diagnostic()

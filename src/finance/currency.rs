@@ -25,7 +25,7 @@ impl<'a> CurrencyFormat<'a> {
         let value: Decimal = value.into();
         let value_str = format!("{:.*}", self.precision as usize, value.abs());
         if value == Decimal::ZERO {
-            return value_str.replace(".", &self.decimal_separator);
+            return value_str.replace('.', &self.decimal_separator);
         }
         let mut parts = value_str.split('.');
         let whole_str = parts.next().expect("leading decimals");
@@ -62,7 +62,7 @@ impl Clone for CurrencyFormat<'_> {
         Self {
             symbol: self.symbol.clone(),
             name: self.name.clone(),
-            precision: self.precision.clone(),
+            precision: self.precision,
             thousand_separator: self.thousand_separator.clone(),
             decimal_separator: self.decimal_separator.clone(),
         }

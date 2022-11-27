@@ -1,5 +1,6 @@
 use super::{
     currency,
+    model::{Account, AccountType},
     table_identifiers::{
         self, AccountTypesColumn, AccountsColumn, AccountsWithCurrencyAndTypeColumn,
         CurrenciesColumn,
@@ -7,10 +8,7 @@ use super::{
     DatabaseError,
 };
 use miette::{Context, IntoDiagnostic, Result};
-use roolah::{
-    finance::CurrencyFormat,
-    model::{Account, AccountType},
-};
+use roolah::finance::CurrencyFormat;
 use rust_decimal::Decimal;
 use sqlx::{Connection, SqliteConnection};
 
@@ -29,7 +27,7 @@ pub async fn create_accounts_view(conn: &mut SqliteConnection) -> Result<()> {
             {currencies}.{precision} AS {view_precision},
             {currencies}.{thousand_separator} AS {view_thousand_separator},
             {currencies}.{decimal_separator} AS {view_decimal_separator},
-            {account_types}.{account_type_name} as {view_account_type_name}
+            {account_types}.{account_type_name} AS {view_account_type_name}
         FROM {accounts}
         INNER JOIN {account_types}
             ON {accounts}.{account_type} = {account_types}.{account_type_id}
@@ -68,8 +66,8 @@ pub async fn create_accounts_view(conn: &mut SqliteConnection) -> Result<()> {
     ))
     .execute(conn)
     .await
-    .map(|_| ())
-    .into_diagnostic()
+    .into_diagnostic()?;
+    Ok(())
 }
 
 pub async fn create_account<'a>(
@@ -95,9 +93,9 @@ pub async fn create_account<'a>(
         currency = AccountsColumn::Currency,
         account_type = AccountsColumn::AccountType,
     ))
-    .bind(&name)
+    .bind(name)
     .bind(currency_id)
-    .bind(account_type.tag.id)
+    .bind(account_type.id)
     .execute(&mut transaction)
     .await
     .into_diagnostic()
@@ -146,7 +144,7 @@ pub async fn get_account_by_name(
         accounts_view = table_identifiers::ACCOUNTS_WITH_CURRENCY_AND_TYPE,
         name = AccountsColumn::Name
     ))
-    .bind(&name)
+    .bind(name)
     .fetch_one(conn)
     .await
     .into_diagnostic()

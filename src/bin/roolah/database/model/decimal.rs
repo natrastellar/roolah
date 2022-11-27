@@ -14,6 +14,7 @@ impl From<Decimal> for DbDecimal {
     }
 }
 
+#[allow(clippy::from_over_into)]
 impl Into<Decimal> for DbDecimal {
     fn into(self) -> Decimal {
         self.0

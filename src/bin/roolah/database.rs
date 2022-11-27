@@ -3,20 +3,24 @@ use sqlx::{
     sqlite::{SqliteConnectOptions, SqliteJournalMode, SqliteLockingMode, SqliteSynchronous},
     Connection, SqliteConnection,
 };
+use std::path::Path;
 
 mod account;
 mod currency;
 mod error;
+mod model;
 mod schema;
 mod table_identifiers;
+mod transaction;
+mod utils;
 
 pub use account::{create_account, get_account_by_name, get_all_accounts};
 pub use error::Error as DatabaseError;
+pub use transaction::{create_transaction, TransactionArgs};
 
-async fn create_connection() -> Result<SqliteConnection> {
-    const DATABASE_FILE: &str = "roolah.db"; //TODO user configurable? embed in the file? use as the file?
+async fn create_connection(file: impl AsRef<Path>) -> Result<SqliteConnection> {
     let options = SqliteConnectOptions::new()
-            .filename(DATABASE_FILE)
+            .filename(file)
             .create_if_missing(true)
             .journal_mode(SqliteJournalMode::Wal) // Faster (no network file support)
             .locking_mode(SqliteLockingMode::Exclusive) // Faster + prevents other app access + allows Wal to work on a VFS without shared-memory primitives
@@ -27,8 +31,10 @@ async fn create_connection() -> Result<SqliteConnection> {
         .into_diagnostic()
 }
 
-pub async fn init(clear: bool) -> Result<SqliteConnection> {
-    let mut conn = create_connection().await.wrap_err("failed to connect")?;
+pub async fn init(file: impl AsRef<Path>, clear: bool) -> Result<SqliteConnection> {
+    let mut conn = create_connection(file)
+        .await
+        .wrap_err("failed to connect")?;
     if clear {
         schema::drop_tables(&mut conn).await?;
     }

@@ -7,6 +7,7 @@ pub const CATEGORIES: &str = "categories";
 pub const CURRENCIES: &str = "currencies";
 pub const METHODS: &str = "methods";
 pub const TRANSACTIONS: &str = "transactions";
+pub const TRANSACTIONS_WITH_CATEGORY_AND_METHOD: &str = "transactions_with_category_and_method";
 
 #[derive(ColumnEnum)]
 pub enum AccountTypesColumn {
@@ -42,8 +43,8 @@ pub enum AccountsWithCurrencyAndTypeColumn {
 
 #[derive(ColumnEnum)]
 pub enum CategoriesColumn {
-    Id,
-    Name,
+    CategoryId,
+    CategoryName,
 }
 
 #[derive(ColumnEnum)]
@@ -58,8 +59,8 @@ pub enum CurrenciesColumn {
 
 #[derive(ColumnEnum)]
 pub enum MethodsColumn {
-    Id,
-    Name,
+    MethodId,
+    MethodName,
 }
 
 #[derive(ColumnEnum)]
@@ -67,12 +68,29 @@ pub enum TransactionsColumn {
     Id,
     Date,
     PostedDate,
-    Category,
+    CategoryId,
     Amount,
     DebitAccount,
     CreditAccount,
     Authority,
     Description,
-    Method,
+    MethodId,
+    CheckNumber,
+}
+
+#[derive(ColumnEnum)]
+pub enum TransactionsWithCategoryAndMethodColumn {
+    Id,
+    Date,
+    PostedDate,
+    CategoryId,
+    CategoryName,
+    Amount,
+    DebitAccount,
+    CreditAccount,
+    Authority,
+    Description,
+    MethodId,
+    MethodName,
     CheckNumber,
 }

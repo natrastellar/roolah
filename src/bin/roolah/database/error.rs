@@ -1,5 +1,5 @@
+use super::model::{Account, CurrencyRecord};
 use miette::Diagnostic;
-use roolah::model::{Account, CurrencyRecord};
 
 #[derive(Debug, Diagnostic, thiserror::Error)]
 pub enum Error {

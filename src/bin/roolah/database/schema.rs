@@ -19,6 +19,21 @@ macro_rules! drop_existing_tables {
     };
 }
 
+macro_rules! drop_existing_views {
+    ($($view:expr),*) => {
+        (|| {
+            let mut s = String::new();
+            $(
+                s += "DROP VIEW IF EXISTS ";
+                s += $view;
+                s += ";";
+            )*
+            s
+        })()
+    };
+}
+
+#[allow(clippy::redundant_closure_call)]
 pub async fn drop_tables(conn: &mut SqliteConnection) -> Result<()> {
     sqlx::query(&drop_existing_tables!(
         table_identifiers::TRANSACTIONS,
@@ -28,10 +43,20 @@ pub async fn drop_tables(conn: &mut SqliteConnection) -> Result<()> {
         table_identifiers::CATEGORIES,
         table_identifiers::METHODS
     ))
-    .execute(conn)
+    .execute(&mut *conn)
     .await
     .into_diagnostic()
     .wrap_err("failed to drop tables")?;
+
+    sqlx::query(&drop_existing_views!(
+        table_identifiers::ACCOUNTS_WITH_CURRENCY_AND_TYPE,
+        table_identifiers::TRANSACTIONS_WITH_CATEGORY_AND_METHOD
+    ))
+    .execute(conn)
+    .await
+    .into_diagnostic()
+    .wrap_err("failed to drop views")?;
+
     Ok(())
 }
 
@@ -171,8 +196,8 @@ async fn create_categories_table(conn: &mut SqliteConnection) -> Result<()> {
         STRICT;
         CREATE UNIQUE INDEX IF NOT EXISTS category_name ON {categories} ({name})",
         categories = table_identifiers::CATEGORIES,
-        id = CategoriesColumn::Id,
-        name = CategoriesColumn::Name,
+        id = CategoriesColumn::CategoryId,
+        name = CategoriesColumn::CategoryName,
     ))
     .execute(conn)
     .await
@@ -194,8 +219,8 @@ async fn create_methods_table(conn: &mut SqliteConnection) -> Result<()> {
         STRICT;
         CREATE UNIQUE INDEX IF NOT EXISTS method_name ON {methods} ({name})",
         methods = table_identifiers::METHODS,
-        id = MethodsColumn::Id,
-        name = MethodsColumn::Name,
+        id = MethodsColumn::MethodId,
+        name = MethodsColumn::MethodName,
     ))
     .execute(conn)
     .await
@@ -260,9 +285,9 @@ async fn create_transactions_table(conn: &mut SqliteConnection) -> Result<()> {
         id = TransactionsColumn::Id,
         date = TransactionsColumn::Date,
         posted_date = TransactionsColumn::PostedDate,
-        category = TransactionsColumn::Category,
+        category = TransactionsColumn::CategoryId,
         categories = table_identifiers::CATEGORIES,
-        category_id = CategoriesColumn::Id,
+        category_id = CategoriesColumn::CategoryId,
         amount = TransactionsColumn::Amount,
         debit_account = TransactionsColumn::DebitAccount,
         accounts = table_identifiers::ACCOUNTS,
@@ -270,9 +295,9 @@ async fn create_transactions_table(conn: &mut SqliteConnection) -> Result<()> {
         credit_account = TransactionsColumn::CreditAccount,
         authority = TransactionsColumn::Authority,
         description = TransactionsColumn::Description,
-        method = TransactionsColumn::Method,
+        method = TransactionsColumn::MethodId,
         methods = table_identifiers::METHODS,
-        method_id = MethodsColumn::Id,
+        method_id = MethodsColumn::MethodId,
         check_number = TransactionsColumn::CheckNumber,
     ))
     .execute(conn)
