@@ -1,3 +1,3 @@
 # Roolah
 
-A budgeting and productivity app for neurodivergent brains.
+A budgeting and productivity app.
