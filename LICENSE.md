@@ -3,7 +3,7 @@
 
 This is not a license.
 
-Copyright (c) Natrastellar. All rights reserved.
+Copyright (c) Mori. All rights reserved.
 
 Because this software was published on GitHub, you have
 already been granted a limited license in the GitHub Terms
