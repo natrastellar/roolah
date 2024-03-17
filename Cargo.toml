@@ -1,14 +1,14 @@
 [package]
 name = "roolah"
 version = "0.1.0"
-authors = ["natrastellar"]
+authors = ["Mori"]
 edition = "2021"
-description = "A budgeting and productivity app for neurodivergent brains."
+description = "A budgeting and productivity app."
 # documentation = 
 readme = "README.md"
 # homepage = 
-repository = "https://github.com/natrastellar/roolah"
-license = "AGPL-3.0-or-later"
+repository = "https://github.com/remorae/roolah"
+license-file = "LICENSE.md"
 keywords = []
 categories = []
 
